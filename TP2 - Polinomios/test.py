@@ -41,8 +41,30 @@ class poly:
         else:
             raise TypeError("Unsupported operand type for +: {}".format(type(other)))
         
-    def __sub__ ():
-        pass
+    def __radd__(self, other):
+        return self.__add__(other)
+    
+    def __sub__(self, other):
+        if isinstance(other, (int, float)): #si other es int o floar, devuelve True
+            # Crear un polinomio de grado 0 con el valor del escalar
+            new_poly = poly(0, [other])
+            return self - new_poly
+        
+        elif isinstance(other, poly):
+            # Extender el polinomio de menor grado al de mayor grado
+            max_degree = max(self.n, other.n)
+            self_coefs = self.coefs + [0] * (max_degree - self.n)
+            other_coefs = other.coefs + [0] * (max_degree - other.n)
+            # Sumar los coeficientes de los polinomios extendidos
+            sub_coefs = [a - b for a, b in zip(self_coefs, other_coefs)]
+            
+            return poly(max_degree, sub_coefs)
+        
+        else:
+            raise TypeError("Unsupported operand type for +: {}".format(type(other)))
+        
+    def __rsub__(self, other):
+        return self.__sub__(other)
 
     def get_expression(self):
         expression = "p(x) = "
@@ -67,6 +89,7 @@ class poly:
         plt.show()
 
 a = poly(n, coefs)
+b = poly(5,[2,51,51,4,6,32])
 
-newPoly =  a+100
+newPoly =  b-a
 print(newPoly.get_expression())
