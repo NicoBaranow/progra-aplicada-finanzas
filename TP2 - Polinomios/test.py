@@ -99,6 +99,7 @@ class poly:
             elif coef < 0: expression += f'- {coef*-1}x^{n} '
             else: expression += f'{coef}x^{n} '
 
+        if expression == "p(x) = ": expression += '0'
         return expression
     
     def poly_plot(self, a, b, **kwargs):
@@ -175,8 +176,26 @@ class poly:
                 # Si no se puede encontrar más raíces, terminar el bucle
                 break
         return roots, residual_poly
+    
+    def fprime(self, k, x0 = None):
+        
+        if k > self.n+1: raise ValueError("El grado del polinomio a derivar +1 debe ser menor a k")
+        
+        fprima = self
+        for i in range(k):
+            fprima = fprima.derivada()
+            
+        if x0 == None: return fprima
+        
+        return fprima(x0)
+        
+
 
 a = poly(4, [2, -6, -11, 9, 1])
 b = poly(2, [-2,0,3])
-root = a.findroots()
-print(root)
+
+
+print(a.get_expression())
+newPoly = a.fprime(3)
+
+print(newPoly.get_expression())
