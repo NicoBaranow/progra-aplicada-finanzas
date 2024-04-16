@@ -1,11 +1,9 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-n = 3 #grado polinomio
-coefs = [2,3,0,-5] #2 -2x^1 
-
+# b = poly(2, [-2,0,3])
 class poly:
+
     def __init__(self, n=0, coefs = [0]):
         '''
         n: int igual al grado del polinomio
@@ -87,8 +85,6 @@ class poly:
     def __rmul__(self, other):
         return self.__mul__(other)
 
-    #Missing __floordiv__; __rfloordiv__; __mod__; __rmod__.
-
     def get_expression(self):
         expression = "p(x) = "
 
@@ -118,6 +114,7 @@ class poly:
         return poly(self.n - 1, derivative_coefs)
 
     def root_find_bisection(self,a,b, tolerance = 1e-5, iter = 1000):
+   
         '''
         Toma como parametro dos valores entre los cuales buscar la raiz real del polinomio; tolerancia del 0; iteraciones.
         a*b <= 0. 
@@ -189,13 +186,67 @@ class poly:
         
         return fprima(x0)
         
+ #Missing __floordiv__; __rfloordiv__; __mod__; __rmod__; find_roots.
+
+
+class taylor(poly):
+    def __init__(self, f, n, x0, digits, h=0.01):
+        
+        super(taylor, self).__init__(self.n, self.get_parms())
+        self.ft = f
+        self.n = n
+        self.x0 = x0
+        self.h = h
+        self.feval = [self.ft(self.x0 + (self.n - 2*i)*self.h) for i in range(self.n + 1)]
+        self.fprime = [self.derivada_n(j) for j in range(self.n + 1)]
+        self.prtTaylor = True
+        self.digits = digits
+
+    def __str__(self): 
+        
+        if self.prtTaylor:
+            expression = 'P(x, x0) = '
+            
+        
+        else: return str()
 
 
 a = poly(4, [2, -6, -11, 9, 1])
-b = poly(2, [-2,0,3])
 
+print(str(a))
 
-print(a.get_expression())
-newPoly = a.fprime(3)
+### JUAN ###
+# class taylor(poly):
+#     def __init__(self, ft, n, x0, feval = [], fprime = [], h=0.01, prtTaylor = False, digits = 0):
+        
+#         self.ft = ft
+#         self.n = n
+#         self.x0 = x0
+#         self.h = h
+#         self.prtTaylor = prtTaylor
+#         self.digits = digits
+#         self.feval = feval
+#         self.fprime = fprime
 
-print(newPoly.get_expression())
+#         for i in range(self.n+1): 
+#             self.feval.append(self.ft(self.x0 + (self.n - 2*i)*self.h))
+        
+#         for i in range(self.n + 1):
+#             self.fprime.append(self.derivada_n(i))
+        
+#         self.poly_taylor = poly(self.n, self.get_parms())
+
+### FINI ###
+# class taylor(poly):
+#     def __init__(self, ft, n, x0, digits, h=0.01):
+        
+#         super(taylor, self.__init__(self.get_parms))
+#         self.ft = ft
+#         self.n = n
+#         self.x0 = x0
+#         self.h = h
+#         self.feval = [self.ft(self.x0 + (self.n-i) * self.h) for i in range(self.n + 1)]
+#         self.fprime = [self.derivada_n(j) for j in range(self.n + 1)]
+#         self.prtTaylor = True
+#         self.digits = digits
+
