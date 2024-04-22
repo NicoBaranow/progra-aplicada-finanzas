@@ -192,10 +192,8 @@ class poly:
 class linreg(poly):
 
     def __init__(self, datos = []):
-        '''
-        
-        '''
+
         self.datos = datos
         self.beta = np.sum((self.X - np.mean(self.X)) * (self.Y - np.mean(self.Y))) / np.sum((self.X - np.mean(self.X))**2)
-        self.alpha = alpha
+        self.alpha = None
         super(linreg, self).__init__()

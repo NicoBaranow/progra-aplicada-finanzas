@@ -58,47 +58,8 @@ class taylor(polis):
             return derivada
 
 
-a = taylor(f,3,1)
+#a = taylor(f,3,1)
+b = polis(1,[-124,14])
+print(b.get_expression())
 
-print(a)
-
-
-
-
-
-
-### JUAN ###
-# class taylor(poly):
-#     def __init__(self, ft, n, x0, feval = [], fprime = [], h=0.01, prtTaylor = False, digits = 0):
-        
-#         self.ft = ft
-#         self.n = n
-#         self.x0 = x0
-#         self.h = h
-#         self.prtTaylor = prtTaylor
-#         self.digits = digits
-#         self.feval = feval
-#         self.fprime = fprime
-
-#         for i in range(self.n+1): 
-#             self.feval.append(self.ft(self.x0 + (self.n - 2*i)*self.h))
-        
-#         for i in range(self.n + 1):
-#             self.fprime.append(self.derivada_n(i))
-        
-#         self.poly_taylor = poly(self.n, self.get_parms())
-
-### FINI ###
-# class taylor(poly):
-#     def __init__(self, ft, n, x0, digits, h=0.01):
-        
-#         super(taylor, self.__init__(self.get_parms))
-#         self.ft = ft
-#         self.n = n
-#         self.x0 = x0
-#         self.h = h
-#         self.feval = [self.ft(self.x0 + (self.n-i) * self.h) for i in range(self.n + 1)]
-#         self.fprime = [self.derivada_n(j) for j in range(self.n + 1)]
-#         self.prtTaylor = True
-#         self.digits = digits
 

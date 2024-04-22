@@ -22,19 +22,49 @@ class matrix:
         return expression
     
     def __mul__ (self,other):
-        if self.c != other.r: raise ValueError("Las columnas de la primer matriz deben coinsidir con las filas de la segunda")
-        if not self.by_row: self.switch()
-        if not other.by_row: other.switch()
+        if self.c != other.r: raise ValueError("Las columnas de la primer matriz deben coincidir con las filas de la segunda")
+        
+        matrixa = matrix(self.elems,self.r,self.c,self.by_row)
+        matrixb = matrix(other.elems,other.r,other.c,other.by_row)
+        
+        if isinstance(other,(int,float)): return matrix([other * element for element in matrixa],matrixa.r,matrixa.c,matrixa.by_row)
+        
+        if not matrixa.by_row: matrixa.switch()
+        if not matrixb: matrixb.switch()
 
         result_elems = []
-        for i in range(1, self.r + 1):
-            for j in range(1, other.c + 1):
-                elem = sum(self.get_elem(i, k) * other.get_elem(k, j) for k in range(1, self.c + 1))
+        for i in range(1, matrixa.r + 1):
+            for j in range(1, matrixb.c + 1):
+                elem = sum(matrixa.get_elem(i, k) * matrixb.get_elem(k, j) for k in range(1, matrixa.c + 1))
                 result_elems.append(elem)
 
-        return matrix(result_elems, self.r, other.c)
+        
+        return matrix(result_elems, matrixa.r, matrixb.c)
 
+    def switch(self):
 
+        aux= []
+        if self.by_row:
+            coord_1= self.c
+            coord_2= self.r
+            self.by_row= False
+        else:
+            coord_1= self.r
+            coord_2= self.c
+            self.by_row= True
+
+        for i in range(coord_1):
+            for t in range(coord_2):
+                aux.append(self.elems[coord_1*t+i])
+        
+        self.elems= aux
+
+    def identity(self,m,): 
+        
+        ident = matrix([0]*(m*m),m,m)
+        for n in range(1, m+1): ident.elems[ident.get_pos(n,n)] = 1
+        return ident
+        
     def get_pos(self,j,k):
         '''
         Coordenadas j,k en la matriz del elemento X sub j,k. Devuelve la posicion i en la lista de elementos de la matriz
@@ -56,6 +86,7 @@ class matrix:
         Devuelve el contenido de una fila j
         '''
         if j <= 0 or j > self.r: raise ValueError("Índice de fila fuera de rango")
+        
         if self.by_row: return self.elems[(j-1) * self.c: j * self.c]
         return self.elems[j - 1: self.c *self.r: self.r]
 
@@ -65,7 +96,7 @@ class matrix:
         '''
         if k <= 0 or k > self.c: raise ValueError("Índice de fila fuera de rango")
         if not self.by_row: return self.elems[(k-1) * self.r: k * self.r]
-        return self.elems[k - 1: self.r *self.c: self.c]
+        return self.elems[k - 1: self.r * self.c: self.c]
 
     def get_elem(self,j,k): 
         '''
@@ -83,27 +114,43 @@ class matrix:
                 submatrix_elems.append(self.get_elem(row, col))
         return matrix(submatrix_elems, len(row_list), len(col_list))
 
-    def switch(self):
-        new_elems = [0] * (self.r * self.c)
-        for i in range(self.r):
-            for j in range(self.c):
-                if self.by_row:
-                    new_elems[i * self.c + j] = self.elems[j * self.r + i]
-                else:
-                    new_elems[j * self.r + i] = self.elems[i * self.c + j]
-        self.elems = new_elems
-        self.by_row = not self.by_row
+    def del_row(self,j):
+        '''
+        Toma en numero de fila a eliminar, devuelve una nueva matriz sin la fila j
+        '''
+        ident = self.identity(self.c)
+        ident.elems[ident.get_pos(j,j)] = 0
+        new_matrix = ident * self
+        return matrix(new_matrix.elems[:(j-1)*self.c]+new_matrix.elems[j*self.c:], self.r - 1, self.c)
+    
+    def del_col(self,j):
+        '''
+        Toma en numero de columna a eliminar, devuelve una nueva matriz sin la columna j
+        '''
+        ident = self.identity(self.c)
+        ident.elems[ident.get_pos(j,j)] = 0
+        new_matrix = self * ident
+        
+        indices = list(range(j-1, self.r * self.c, self.c))
+        nueva_lista = [new_matrix.elems[i] for i in range(self.c * self.r) if i not in indices]
+        return matrix(nueva_lista,self.r,self.c-1)
 
-a = matrix([10,11,12,13,14,15], 3, 2,False)
+a = matrix([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16], 4, 4, False)
 b = matrix([9,5,2,3,4,5],2,3)
-print(a*b)
 
-# [ 10 13 ] 
-# [ 11 14 ]
-# [ 12 15 ]
+print(a)
+print(a.del_col(2))
 
-# [ 9 5 2 ]
-# [ 3 4 5 ]
 
-#Chequear metodo switch, 
+# funciones del_row( self; j), del_col(self,k) que devuelvan un objeto de la
+# clase habiendo eliminando la Öla j o la columna k. Debe presentar dos ver-
+# siones de estas funciones siguiendo la lÛgica expuesta en get_row(self; j)
+# y get_col (self; k)
+# 1
+
+
 #Segunda version de get_row, get_col, get_elem. "La segunda que sea valiendose de la multiplicacion a izquierda o a derecha por un vector"
+# [ 1 2 3 4 ] 
+# [ 5 6 7 8 ] 
+# [ 9 10 11 12 ] 
+# [ 13 14 15 16 ] 
