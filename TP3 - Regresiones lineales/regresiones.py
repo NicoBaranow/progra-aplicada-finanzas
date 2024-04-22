@@ -196,7 +196,6 @@ class linreg(poly):
         
         '''
         self.datos = datos
-        self.beta = np.sum((self.X - np.mean(self.X)) * (self.Y - np.mean(self.Y))) / \
-                        np.sum((self.X - np.mean(self.X))**2)
+        self.beta = np.sum((self.X - np.mean(self.X)) * (self.Y - np.mean(self.Y))) / np.sum((self.X - np.mean(self.X))**2)
         self.alpha = alpha
         super(linreg, self).__init__()
