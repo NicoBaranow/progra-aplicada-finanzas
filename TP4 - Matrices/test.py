@@ -135,22 +135,46 @@ class matrix:
         nueva_lista = [new_matrix.elems[i] for i in range(self.c * self.r) if i not in indices]
         return matrix(nueva_lista,self.r,self.c-1)
 
+    def swap_cols_index(self,j,k):
+        '''
+        Toma el número de dos columnas y devuelve una nueva matriz con las columnas intercambiadas.
+        '''
+
+        if j not in range(self.c+1) or k not in range(self.c+1): raise ValueError ("Las columnas a intercambiar deben pertenecer a la matriz")
+        
+        new_matrix = matrix(self.elems,self.r,self.c,self.by_row)
+        if new_matrix.by_row: new_matrix.switch()
+
+        cols = []
+        for i in range(new_matrix.c): cols += [new_matrix.get_col(i+1)]
+        cols[j-1], cols[k-1] = cols[k-1], cols[j-1]
+
+        return matrix([elemento for sublista in cols for elemento in sublista],self.r,self.c,new_matrix.by_row)
+            
+    def swap_rows_index(self, j, k):
+        '''
+        Toma el número de dos filas y devuelve una nueva matriz con las filas intercambiadas.
+        '''
+
+        if j not in range(self.r+1) or k not in range(self.r+1): raise ValueError ("Las filas a intercambiar deben pertenecer a la matriz")
+        
+        new_matrix = matrix(self.elems,self.r,self.c,self.by_row)
+        # if not new_matrix.by_row: new_matrix.switch()
+
+        
+        rows = []
+        for i in range(self.r): rows += [new_matrix.get_row(i+1)]
+
+        rows[j-1], rows[k-1] = rows[k-1], rows[j-1]
+
+        elems = [elemento for sublista in rows for elemento in sublista]
+        return matrix(elems,self.r,self.r,True)
+    
+
 a = matrix([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16], 4, 4, False)
 b = matrix([9,5,2,3,4,5],2,3)
 
 print(a)
-print(a.del_col(2))
+print(a.swap_rows_index(2,3))
 
 
-# funciones del_row( self; j), del_col(self,k) que devuelvan un objeto de la
-# clase habiendo eliminando la Öla j o la columna k. Debe presentar dos ver-
-# siones de estas funciones siguiendo la lÛgica expuesta en get_row(self; j)
-# y get_col (self; k)
-# 1
-
-
-#Segunda version de get_row, get_col, get_elem. "La segunda que sea valiendose de la multiplicacion a izquierda o a derecha por un vector"
-# [ 1 2 3 4 ] 
-# [ 5 6 7 8 ] 
-# [ 9 10 11 12 ] 
-# [ 13 14 15 16 ] 
