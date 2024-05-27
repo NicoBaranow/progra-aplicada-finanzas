@@ -20,7 +20,7 @@ class gauss(matrix):
         
         super(gauss,self).__init__(lista_A,N,N,by_row)
         
-        self.L,self.U= self.factor_LU()
+        # self.L,self.U= self.factor_LU()
         self.A_1= self.Minverse()
         self.by_row= by_row
         

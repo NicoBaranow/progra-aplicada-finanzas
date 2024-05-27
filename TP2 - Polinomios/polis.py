@@ -13,78 +13,67 @@ class poly:
         self.n = n
         self.coefs = coefs
    
-    def __str__(self):
-        expression = "p(x) = "
+    def __str__(self, function = "p(x) = ", variable = 'x'):
+        expression =  function
 
         for n, coef in enumerate(self.coefs):
             
             if coef == 0: continue
-            if coef > 0 and n != 0: expression += f'+ {coef}x^{n} '
-            elif coef < 0: expression += f'- {coef*-1}x^{n} '
-            else: expression += f'{coef}x^{n} '
+            if coef > 0 and n != 0: expression += f'+ {coef}{variable}^{n} '
+            elif coef < 0: expression += f'- {coef*-1}{variable}^{n} '
+            else: expression += f'{coef}{variable}^{n} '
 
         if expression == "p(x) = ": expression += '0'
         return expression
-    
+
     def __call__(self, x):
         y = 0
         for n, coef in enumerate(self.coefs):
             y += coef * x**n
         return y
-    
+
     def __add__(self, other):
-        if isinstance(other, (int, float)): #si other es int o floar, devuelve True
-            # Crear un polinomio de grado 0 con el valor del escalar
+        if isinstance(other, (int, float)):
             new_poly = poly(0, [other])
             return self + new_poly
         
         elif isinstance(other, poly):
-            # Extender el polinomio de menor grado al de mayor grado
             max_degree = max(self.n, other.n)
             self_coefs = self.coefs + [0] * (max_degree - self.n)
             other_coefs = other.coefs + [0] * (max_degree - other.n)
-            # Sumar los coeficientes de los polinomios extendidos
             sum_coefs = [a + b for a, b in zip(self_coefs, other_coefs)]
-            
             return poly(max_degree, sum_coefs)
         
         else:
             raise TypeError("Unsupported operand type for +: {}".format(type(other)))
-        
+
     def __radd__(self, other):
         return self.__add__(other)
-    
+
     def __sub__(self, other):
-        if isinstance(other, (int, float)): #si other es int o floar, devuelve True
-            # Crear un polinomio de grado 0 con el valor del escalar
+        if isinstance(other, (int, float)):
             new_poly = poly(0, [other])
             return self - new_poly
         
         elif isinstance(other, poly):
-            # Extender el polinomio de menor grado al de mayor grado
             max_degree = max(self.n, other.n)
             self_coefs = self.coefs + [0] * (max_degree - self.n)
             other_coefs = other.coefs + [0] * (max_degree - other.n)
-            # Sumar los coeficientes de los polinomios extendidos
             sub_coefs = [a - b for a, b in zip(self_coefs, other_coefs)]
-            
             return poly(max_degree, sub_coefs)
         
         else:
-            raise TypeError("Unsupported operand type for +: {}".format(type(other)))
-        
+            raise TypeError("Unsupported operand type for -: {}".format(type(other)))
+
     def __rsub__(self, other):
         return self.__sub__(other)
 
     def __mul__(self, other):
         if isinstance(other, (int, float)):
-            # Crear un polinomio de grado 0 con el valor del escalar
             scalar_poly = poly(0, [other])
-            # Multiplicar el polinomio de grado 0 por el polinomio actual
             return self * scalar_poly
         
         elif isinstance(other, poly):
-            # Multiplicación de polinomio por otro polinomio
             result_coefs = [0] * (self.n + other.n + 1)
             for i in range(self.n + 1):
                 for j in range(other.n + 1):
@@ -101,21 +90,20 @@ class poly:
         while self.coefs and self.coefs[-1] == 0:
             self.coefs.pop()
         self.n = len(self.coefs) - 1
-        
+
     def __truediv__(self, other):
         return self._divide(other)
 
     def _divide(self, divisor):
         if isinstance(divisor, (int, float)):
             return self * (1/divisor), 0
-        # Normalize the polynomials to remove trailing zeros
+        
         self._normalize()
         divisor._normalize()
 
         if divisor.n == 0 and divisor.coefs[-1] == 0:
             raise ZeroDivisionError("Cannot divide by a zero polynomial")
 
-        # Reverse the coefficients for the division operation
         dividend_reversed = self.coefs[::-1]
         divisor_reversed = divisor.coefs[::-1]
 
@@ -126,18 +114,13 @@ class poly:
             lead_coeff = remainder_reversed[0] / divisor_reversed[0]
             quotient_coeffs_reversed.append(lead_coeff)
 
-            # Subtract the product of the divisor and the current quotient term from the remainder
             product = [lead_coeff * c for c in divisor_reversed] + [0] * (len(remainder_reversed) - len(divisor_reversed))
             remainder_reversed = [rc - pc for rc, pc in zip(remainder_reversed, product)]
-
-            # Remove the used highest degree term from remainder
             remainder_reversed = remainder_reversed[1:]
 
-        # Reverse the quotient and remainder back to original coefficient order
         quotient_coeffs = quotient_coeffs_reversed[::-1]
         remainder_coeffs = remainder_reversed[::-1]
 
-        # Ensure that we remove any leading zeros after reversal
         while (len(quotient_coeffs) > 0) and quotient_coeffs[-1] == 0:
             quotient_coeffs.pop()
         while (len(remainder_coeffs) > 0) and remainder_coeffs[-1] == 0:
@@ -186,33 +169,29 @@ class poly:
         plt.grid(True)
         plt.show()
     
-    def fprime(self, k, x0 = None):
+    def fprime(self, k, x0=None):
         
         if k > self.n+1: raise ValueError("El grado del polinomio a derivar +1 debe ser menor a k")
         
         fprima = self
         for i in range(k): fprima = fprima.derivada()
             
-        if x0 == None: return fprima
+        if x0 is None: return fprima
         
         return fprima(x0)
         
-    def derivada (self):
+    def derivada(self):
         derivative_coefs = [self.coefs[i] * i for i in range(1, self.n + 1)]
         return poly(self.n - 1, derivative_coefs)
 
-    def root_find_bisection(self, a = -200, b = 100, tolerance = 1e-5, iter = 100000):
-        '''
-        Toma como parametro dos valores entre los cuales buscar la raiz real del polinomio; tolerancia del 0; iteraciones.
-        a*b <= 0. 
-        Devuelve una raiz real del polinomio. Caso contrario, da error
-        '''
+    def root_find_bisection(self, a=-200, b=100, tolerance=1e-5, iter=100000):
         iter_count = 0
-        if a * b > 0: raise ValueError("No se puede garantizar la existencia de una raíz en el intervalo dado.")
+        if self(a) * self(b) > 0:
+            raise ValueError("No se puede garantizar la existencia de una raíz en el intervalo dado.")
 
         while iter_count < iter:
             root = (a+b) / 2
-            if abs(self(root)) <= tolerance: return round(root,3)
+            if abs(self(root)) <= tolerance: return round(root, 3)
             if self(a) * self(root) < 0: b = root
             else: a = root
             iter_count += 1
@@ -220,13 +199,13 @@ class poly:
         print(f"El método de bisección no convergió después de {iter} iteraciones.")
         return None
 
-    def root_find_newton(self, x0 = -100, tolerance = 1e-5, iter = 100000):
+    def root_find_newton(self, x0=-100, tolerance=1e-5, iter=100000):
         iter_count = 0
         root = x0
         while iter_count < iter:
             f_x = self(root)
 
-            if abs(f_x) < tolerance: return round(root,3)
+            if abs(f_x) < tolerance: return round(root, 3)
             
             f_prime_x = self.derivada()(root)
             if f_prime_x == 0:
@@ -238,23 +217,21 @@ class poly:
         return None
 
     def root_find_secante(self, x0=-1, x1=2, tolerance=1e-5, max_iter=1000):
-        '''
-        Encuentra una raíz de la función utilizando el método de la secante.
-        '''
         iterations = 0
 
         while iterations < max_iter:
-            if abs(self(x1) - self(x0)) < 1e-10: raise ValueError("La diferencia entre los valores de la función en x1 y x0 es demasiado pequeña.")
+            if abs(self(x1) - self(x0)) < 1e-10:
+                raise ValueError("La diferencia entre los valores de la función en x1 y x0 es demasiado pequeña.")
 
-            root = x0 - self(x0) * (x1 - x0) / (self(x1) - self(x0))  
+            root = x0 - self(x0) * (x1 - x0) / (self(x1) - self(x0))
 
-            if abs(self(root)) < tolerance: return round(root,3)
+            if abs(self(root)) < tolerance: return round(root, 3)
             x0 = x1
             x1 = root
 
             iterations += 1
 
-        print (f"No se encontró raíz entre {x0} y {x1} después de {max_iter} iteraciones.")
+        print(f"No se encontró raíz entre {x0} y {x1} después de {max_iter} iteraciones.")
         return None
 
     def find_roots(self, tolerance=1e-5):
@@ -262,7 +239,7 @@ class poly:
         residual_poly = self
     
         while residual_poly.n > 0:
-            root = residual_poly.root_find_secante()        
+            root = residual_poly.root_find_secante()
             if not root: break
             
             multiplicity = 0
@@ -276,7 +253,7 @@ class poly:
                     residual_poly = cociente
                 else: break
 
-            if multiplicity > 0: roots.append((round(root,3), multiplicity))
+            if multiplicity > 0: roots.append((round(root, 3), multiplicity))
         
         return roots
 
@@ -285,14 +262,3 @@ class poly:
         expression = ''
         for root, multiplicity in roots: expression += f"(x - {root})^{multiplicity} "
         return expression
-
-a = poly(5, [-120, 274, -225, 85, -15, 1])
-b = poly(2, [3,2,-5])
-c = a%b
-d = a//b
-# print("El cociente de la division es:",d.get_expression())
-# print("El resto de la division es:",c.get_expression())
-
-# print(a.get_expression())
-# print("Las raices del polinomio son:",a.root_find_bisection()) 
-# print(a.factorize())

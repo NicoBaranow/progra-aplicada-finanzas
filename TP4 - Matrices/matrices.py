@@ -1,8 +1,6 @@
 #autovalores
 import sys
-sys.path.append('TP2-Polinomios')
-sys.path.append('TP4 - Matrices')
-
+sys.path.append('TP2 - Polinomios')
 
 from polis import poly
 
@@ -39,12 +37,12 @@ class matrix(poly):
             salida = matrix(new_elems, self.r, self.c)
             
         else:
-            if self.columns != mult.rows:
+            if self.c != mult.r:
                 raise ValueError('the number of rows of array A must be equal to the number of columns in array B')
             for i in range(self.r):
-                fila = self.GetRow(i+1)
+                fila = self.get_row(i+1)
                 for w in range(mult.c):
-                    col = mult.GetCol(w+1)
+                    col = mult.get_col(w+1)
                     suma = 0
                     for x in range(len(fila)):
                         suma += (fila[x]*col[x])
@@ -288,6 +286,20 @@ class matrix(poly):
         
         return matrix(elems,self.r,self.c,True)
     
+    def swap_rows_v2(self,j,k):
+        P=[0]*(self.r**2)
+        P= matrix(P,self.r,self.r,self.by_row)
+        P.elems[P.get_pos(j,k)]= 1
+        P.elems[P.get_pos(k,j)]= 1
+        
+        for i in range(1,self.r+1):
+            if i!=j and i!=k:
+                P.elems[P.get_pos(i,i)]= 1
+        
+        res= self.lprod(P)
+        
+        return res,P
+
     def scale_row(self, j, x):
         '''
         Toma una fila j y la multiplica por el factor x
@@ -384,54 +396,59 @@ class matrix(poly):
         for j in range(1,self.c+1): det+= self.elems[self.get_pos(i,j)]*((-1)**(i+j))* sub_det(i,j).det()
         return det
 
-    def Minverse(self):
-        if self.det()==0 or self.r!= self.c:
-            raise ValueError ("No se puede calcular la inversa de esta matriz.")
+    def I(self):
+        I= [0]*(self.r**2)
+        I= matrix(I,self.r,self.r,self.by_row)
         
-        else:
-            A = matrix(self.elems, self.r, self.c)
-            inversa = self.identity(self.r)
-            for i in range(1,self.c+1):
-                columna = A.get_col(i)
-                pivot = columna[i-1]
-                col = matrix(columna, self.r, 1)
-                col_alterada = col.lprod(-1/pivot)
-                col_alterada.elems[i-1]=1/pivot
-                # print(col_alterada.elems)
-                primer_element_de_col = i-1
-                pos_col = 0
-                identidad_alterada = A.identity(self.r)
-                for pos, element in enumerate(identidad_alterada.elems):
-                    # identidad = self.matriz_identidad(self.r, self.r)
-                    if primer_element_de_col == pos:
-                        identidad_alterada.elems[pos] = col_alterada.elems[pos_col]
-                        primer_element_de_col += self.c
-                        pos_col+=1
-                A = A.lprod(identidad_alterada)
-                # print("identidad alterada:")
-                # print(A.elems)
-                inversa = inversa.lprod(identidad_alterada)
-                # print("inversa:")
-                # print(inversa.elems)
-            print(inversa.elems)
-            return inversa
+        for i in range(1,self.r+1):
+            I.elems[I.get_pos(i,i)]= 1
+        
+        return I
 
-    def polycar(self):
-        for i in range(len(self.elems)):
-            self.elems[i] = poly(0,[self.elems[i]])
+    def Gauss(self):
+        if self.r!=self.c:
+            raise ValueError('la matriz no es cuadrada')
+        if self.det()==0:
+            raise ValueError('El determinante es 0')
+        
+        A_p= self.lprod(self.I())
+        L= []
+        Perm= []
+        
+        for i in range(1,self.r+1):
+            if i<self.r:
+                buscar= A_p.get_col(i)
+                for j in range(i,self.r+1):
+                    if abs(buscar[j-1])>abs(buscar[i-1]):
+                        break
+                if buscar[j-1]!=0:
+                    A_p,P= A_p.swap_rows_v2(i,j) 
+                
+            pivot= A_p.get_col(i)
+            pivot_value= pivot[i-1]
+            pivot= [(-1)*pivot[m] for m in range(len(pivot))]
+            pivot[i-1]= 1
+        
+            factor= [(1/pivot_value)*pivot[m] for m in range(len(pivot))]
+            L.append(self.I())
+            for l in range(1,L[i-1].r+1):
+                L[i-1].elems[L[i-1].get_pos(l,i)]= factor[l-1]
+                
+            if abs(buscar[j-1])>abs(buscar[i-1]): 
+                Perm.append(P)
+            else:
+                Perm.append(A_p.I())
+               
+            A_p= A_p.lprod(L[i-1])
 
-        id = self.identity(self.r)
-        for i in range(len(id.elems)):
-            self.elems[i] = self.elems[i]* poly(1,[0,1])
+        return L,Perm
 
-        px = self - id 
-
-
-        return px
-
-a = matrix([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16], 2, 8, False)
-b = matrix([9,5,2,3,4,5,2,4,5],3,3)
-print(b.polycar())
-# print(a)
-# print(a.flip_cols().flip_cols())
-# print(b.Minverse())
+    def Minverse(self):
+        L,P= self.Gauss()
+        inv= L[0].rprod(P[0])
+        
+        for i in range(1,len(L)):
+            inv= inv.lprod(P[i])
+            inv= inv.lprod(L[i])
+            
+        return inv

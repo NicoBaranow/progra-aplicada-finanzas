@@ -1,6 +1,6 @@
 {
     "python.analysis.extraPaths": [
-        "./TP2-Polinomios",
+        "./TP2 - Polinomios",
         "./TP4 - Matrices"
     ]
 }
