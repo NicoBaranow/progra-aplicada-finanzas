@@ -80,7 +80,7 @@ gs = Gauss_Seidel((1,1), F, G)
 
 print(f"\nPara los polinomios: \n", gs.f.__str__('f(x) = ', 'x'),'\n', gs.g.__str__('g(y) = ', 'y'))
 print("\nEl punto de convergencia es:", gs.solve(),'\n') 
-
+gs.plot_sol()
 gs = Gauss_Seidel((1,1), G, F)
 
 print(f"\nPara los polinomios: \n", gs.f.__str__('f(x) = ', 'x'),'\n', gs.g.__str__('g(y) = ', 'y'))

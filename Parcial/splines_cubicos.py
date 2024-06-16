@@ -18,6 +18,14 @@ class cub_interp(matrix):
         self.matrix, self.matrix_results = self.build_matrix()
         self.solution_matrix, self.solution_polis = self.solve()
 
+    def __call__(self, x):
+        """
+        Evaluates the interpolated value at x.
+        """
+        for i in range(self.N):
+            if self.points[i][0] <= x <= self.points[i+1][0]:
+                return self.solution_polis[i](x)
+
     def build_matrix(self):
         '''
         Devuelve una matriz de splines cúbicos y un vector de resultados para los puntos dados
@@ -113,22 +121,22 @@ class cub_interp(matrix):
         
         return solution, polinomios
 
-    def interplot(self, xmin, xmax, n=100):
+    def plot(self, xmin, xmax, n=100):
         """
-        Grafica la interpolación cúbica en el rango [xmin, xmax] con n puntos.
+        Plots the cubic interpolation in the range [xmin, xmax] with n points.
         """
         x_values = np.linspace(xmin, xmax, n)
         y_values = [self(x) for x in x_values]  
 
-        plt.plot(x_values, y_values, label='Interpolación cúbica')
+        plt.plot(x_values, y_values, label='Cubic Interpolation')
         
         orig_x = [point[0] for point in self.points]
         orig_y = [point[1] for point in self.points]
-        plt.scatter(orig_x, orig_y, color='red', label='Puntos originales')
+        plt.scatter(orig_x, orig_y, color='red', label='Original Points')
 
         plt.xlabel('x')
         plt.ylabel('y')
-        plt.title('Interpolación cúbica')
+        plt.title('Cubic Interpolation')
         plt.legend()
         plt.grid(True)
         plt.show()
@@ -136,8 +144,9 @@ class cub_interp(matrix):
 a = cub_interp([(1, 2.718), (8, 1.118), (9, 1.221)] )
 
 print(a.matrix)
-# a.interplot(0, 10)
+
 print(a.matrix_results)
 print(a.solution_matrix)
-
-
+for poli in a.solution_polis:
+    print(poli.__str__('f(x): ', 'x'))
+a.plot(-10, 10)

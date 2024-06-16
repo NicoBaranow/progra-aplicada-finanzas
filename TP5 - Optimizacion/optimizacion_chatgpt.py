@@ -1,36 +1,52 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+plt.arrow(0, 0, 1, 1, head_width=0.05, head_length=0.1, fc='r', ec='r', color='b')
+
+
+plt.show()
+
 class opt2d:
     def __init__(self, f):
 
         self.f = f
-        self.hx = 0.001
-        self.hy = 0.001
+        self.hx = 0.0001
+        self.hy = 0.0001
 
-    def fx(self, x):
-        return (self.f(x[0] + self.hx, x[1]) - self.f(x[0] - self.hx, x[1])) / (2 * self.hx)
+    def fx(self, x = (0,0)):
+        return (self.f((x[0] + self.hx, x[1])) - self.f((x[0] - self.hx, x[1]))) / (2 * self.hx)
 
-    def fy(self, x):
-        return (self.f(x[0], x[1] + self.hy) - self.f(x[0], x[1] - self.hy)) / (2 * self.hy)
+    def fy(self, x = (0,0)):
+        return (self.f((x[0], x[1] + self.hy)) - self.f((x[0], x[1] - self.hy))) / (2 * self.hy)
 
-    def fxx(self, x):
+    def fxx(self, x = (0,0)):
         return (self.fx((x[0] + self.hx, x[1])) - self.fx((x[0] - self.hx, x[1]))) / (2 * self.hx)
 
-    def fyy(self, x):
+    def fyy(self, x = (0,0)):
         return (self.fy((x[0], x[1] + self.hy)) - self.fy((x[0], x[1] - self.hy))) / (2 * self.hy)
 
-    def fxy(self, x):
+    def fxy(self, x = (0,0)):
         return (self.fx((x[0], x[1] + self.hy)) - self.fx((x[0], x[1] - self.hy))) / (2 * self.hy)
 
-    def gradf(self, x):
-        return np.array([self.fx(x), self.fy(x)])
+    def gradf(self, x = (0,0)):
+        '''
+        Devuelve el gradiente de f en forma de tupla
+        '''
+        return (self.fx(x), self.fy(x))
 
-    def fv(self, x, v):
+    def fv(self, x = (0, 0), v = (2, 3)):
+        '''
+        Dado un punto (x,y) y un vector v, devuelve la derivada direccional de f en esa dirección
+        '''
+
         grad = self.gradf(x)
-        return np.dot(grad, v) / np.linalg.norm(v)
+        norma = (v[0] ** 2 + v[1] ** 2) ** 0.5
+        return grad[0]*v[0]/norma + grad[1]*v[1]/norma
 
-    def campo_gradiente(self, x_range, y_range, nx, ny):
+    def campo_gradiente(self, x_range = (0,10), y_range = (0,10), nx = (0,0), ny = (0,0)):
+        '''
+        Toma un rango en x, un rango en y y la cantidad de puntos en x e y
+        '''
         x = np.linspace(x_range[0], x_range[1], nx)
         y = np.linspace(y_range[0], y_range[1], ny)
         X, Y = np.meshgrid(x, y)
@@ -62,24 +78,11 @@ class opt2d:
         return x, np.array(path)
 
 # Función de ejemplo
-def f(x, y):
-    return np.sin(x/3) * np.cos(y/3)
+def function(x): #x es una tupla (x,y)
+    return np.sin(x[0]/3) * np.cos(x[1]/3)
 
 # Crear una instancia de la clase
-opt = opt2d(f)
+opt = opt2d(function) #le pasamos una función como parametro, pero no la ejecutamos, por eso sin ()
 
-# Graficar el campo de gradientes
-opt.campo_gradiente((-5, 5), (-5, 5), 20, 20)
+print(opt.fv())
 
-# Buscar el mínimo local usando descenso por gradiente
-minimo, path = opt.gdescent(4, 2)
-print("Mínimo local:", minimo)
-
-# Graficar la trayectoria del descenso por gradiente
-path = np.array(path)
-plt.plot(path[:, 0], path[:, 1], 'o-', label='Trayectoria')
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title('Descenso por Gradiente')
-plt.legend()
-plt.show()
