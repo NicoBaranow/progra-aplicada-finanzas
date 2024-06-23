@@ -1,10 +1,12 @@
 #autovalores
 import sys
+sys.path.append('TP6 - Vectores')
 sys.path.append('TP2 - Polinomios')
+from vectores import vector
 
 from polis import poly
 
-class matrix(poly):
+class matrix(poly, vector):
     def __init__ (self, elems = [], rows = 0, columns = 0, by_row = True):
         '''
         elems es una lista con los elementos de la matriz, no una lista de listas. 
@@ -31,23 +33,40 @@ class matrix(poly):
     
     def __mul__(self, mult): #arreglar para cuando la otra matriz False
         new_elems = []
-        if isinstance(mult, int) or isinstance(mult,float):
+        if isinstance(mult, int) or isinstance(mult, float):
             for i in range(len(self.elems)):
-                new_elems.append(self.elems[i]*mult)            
+                new_elems.append(self.elems[i] * mult)            
             salida = matrix(new_elems, self.r, self.c)
             
-        else:
+        elif isinstance(mult, matrix):
             if self.c != mult.r:
                 raise ValueError('the number of rows of array A must be equal to the number of columns in array B')
-            for i in range(self.r):
-                fila = self.get_row(i+1)
+            for I in range(self.r):
+                fila = self.get_row(I + 1)
                 for w in range(mult.c):
-                    col = mult.get_col(w+1)
+                    col = mult.get_col(w + 1)
                     suma = 0
                     for x in range(len(fila)):
-                        suma += (fila[x]*col[x])
+                        suma += (fila[x] * col[x])
                     new_elems.append(suma)                    
-            salida = matrix(new_elems, self.r, mult.c) 
+            salida = matrix(new_elems, self.r, mult.c)
+            
+        elif isinstance(mult, vector):
+            mult_matrix = matrix(mult.x, len(mult.x), 1)
+            if self.c != mult_matrix.r:
+                raise ValueError('the number of rows of array A must be equal to the number of columns in array B')
+            for I in range(self.r):
+                fila = self.get_row(I + 1)
+                col = mult_matrix.get_col(1)
+                suma = 0
+                for x in range(len(fila)):
+                    suma += (fila[x] * col[x])
+                new_elems.append(suma)
+            salida = vector(new_elems)
+            
+        else:
+            raise TypeError('Unsupported operand type(s) for *: \'matrix\' and \'' + type(mult).__name__ + '\'')
+        
         return salida
     
     def __rmul__(self, mult):
@@ -72,39 +91,49 @@ class matrix(poly):
         
     #     return matrix(result_elems, matrixa.r, matrixb.c)
 
-    def __add__(self,B):
-        aux= []
-        if isinstance(B,int) or isinstance(B,float):
+    def __add__(self, B):
+        aux = []
+        if isinstance(B, int) or isinstance(B, float):
             for i in range(len(self.elems)):
-                aux.append(self.elems[i]+ B)
+                aux.append(self.elems[i] + B)
+        elif isinstance(B, vector):
+            if len(self.elems) != len(B.x):
+                raise ValueError('Dimension mismatch between matrix and vector')
+            for i in range(len(self.elems)):
+                aux.append(self.elems[i] + B.x[i])
         else:
-            if (self.r,self.c)!=(B.r,B.c):
-                print('No se puede realizar la operacion')
-            if self.by_row!=B.by_row:
+            if (self.r, self.c) != (B.r, B.c):
+                raise ValueError('Matrix dimensions do not match')
+            if self.by_row != B.by_row:
                 B.switch()
             
             for i in range(len(self.elems)):
-                aux.append(self.elems[i]+B.elems[i])
+                aux.append(self.elems[i] + B.elems[i])
                 
-        res= matrix(aux,self.r,self.c,self.by_row)
+        res = matrix(aux, self.r, self.c, self.by_row)
         return res
     
-    def __sub__(self,B):
-        aux= []
-        if isinstance(B,int) or isinstance(B,float):
+    def __sub__(self, B):
+        aux = []
+        if isinstance(B, int) or isinstance(B, float):
             for i in range(len(self.elems)):
-                aux.append(self.elems[i]- B)
+                aux.append(self.elems[i] - B)
+        elif isinstance(B, vector):
+            if len(self.elems) != len(B.x):
+                raise ValueError('Dimension mismatch between matrix and vector')
+            for i in range(len(self.elems)):
+                aux.append(self.elems[i] - B.x[i])
         else:
-            if (self.r,self.c)!=(B.r,B.c):
-                print('No se puede realizar la operacion')
-            if self.by_row!=B.by_row:
+            if (self.r, self.c) != (B.r, B.c):
+                raise ValueError('Matrix dimensions do not match')
+            if self.by_row != B.by_row:
                 B.switch()
             
             for i in range(len(self.elems)):
-                aux.append(self.elems[i]-B.elems[i])
+                aux.append(self.elems[i] - B.elems[i])
                 
-        res= matrix(aux,self.r,self.c,self.by_row)
-        return res        
+        res = matrix(aux, self.r, self.c, self.by_row)
+        return res
 
     def rprod(self,B):
         aux= []

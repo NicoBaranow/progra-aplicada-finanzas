@@ -1,6 +1,8 @@
 {
     "python.analysis.extraPaths": [
         "./TP2 - Polinomios",
-        "./TP4 - Matrices"
+        "./TP4 - Matrices",
+        "./TP5 - Optimizacion",
+        "./TP6 - Vectores",
     ]
 }
