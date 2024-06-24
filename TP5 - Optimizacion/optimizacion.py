@@ -29,10 +29,9 @@ class opt2d(matrix):
     def __init__(self, f, g = None):
         '''
         f: función de dos variables
-        g: función de dos variables que representa la restricción
         '''
         self.f = f
-        self.g = g
+        self.g = opt2d(g) if g is not None else None
         self.hx = 0.0001
         self.hy = 0.0001
 
@@ -56,6 +55,20 @@ class opt2d(matrix):
         Dado un punto (x,y), devuelve el gradiente de f en ese punto
         '''
         return (self.fx(x), self.fy(x))
+    
+    def grad_call(self, x = (0,0)):
+        '''
+        Dado un punto (x,y), devuelve el gradiente de f en ese punto.
+        En caso de ser un numero imaginaro, se devuelve solo la parte real
+        '''
+        # Obtener gradiente en el punto dado
+        grad_x, grad_y = self.gradf(x)
+        
+        # Convertir a real si es necesario
+        grad_x = grad_x.real if isinstance(grad_x, complex) else grad_x
+        grad_y = grad_y.real if isinstance(grad_y, complex) else grad_y
+        
+        return (grad_x, grad_y)
     
     def fv(self, x = (0, 0), v = (2, 3)):
         '''
@@ -94,7 +107,7 @@ class opt2d(matrix):
 
         return X, Y, U, V
 
-    def contour2(self, x0=2, y0=2, repetitions=1000000, alpha=0.01):
+    def contour2(self, x0=2, y0=2, repetitions=100000, alpha=0.01):
         '''
         Devuelve las coordenadas necesarias para graficar las curvas de nivel de f que pasan por el punto (x0, y0) en forma de dos listas
 
@@ -254,7 +267,7 @@ class opt2d(matrix):
 
     def hessiano (self, x = (0,0)):
         '''
-        Devuelve el hessiano de f en el punto x
+        Devuelve una instancia de la clase matriz correspondiente a la matriz hessiana de f en el punto x
         
         Parametros:
             x: punto a evaluar la matriz hessiana
@@ -264,53 +277,208 @@ class opt2d(matrix):
         '''
         return matrix([self.fxx(x), self.fxy(x), self.fxy(x), self.fyy(x)])
 
-    def combined_function(self, x):
+    def zona_admisible (self, function, x0 = -5, y0 = -5, learning_rate = 0.0001, max_iter = 100000):
         '''
-        Combina la función objetivo y la restricción elevándolas al cuadrado y sumándolas
-        '''
-        if self.g:
-            return self.f(x)**2 + 10000 * self.g(x)**2
-        else:
-            return self.f(x)
-
-
-    def optimize_with_constraint(self, initial_point, tol=1e-7, max_iter=100000):
-        '''
-        Optimiza la función objetivo bajo la restricción utilizando el método de Polytopes
+        Encuentra el punto en la zona admisible más cercano al punto inicial (x0, y0)
         
         Parámetros:
-            initial_point: punto inicial para la optimización
+            x0, y0: punto inicial
             tol: tolerancia para la convergencia
             max_iter: número máximo de iteraciones
-
+        
         Retorna:
-            result: punto óptimo encontrado
-            iterations: número de iteraciones realizadas
-            history: historial de puntos generados para graficar
+            tuple: punto en la zona admisible más cercano al punto inicial
         '''
 
-        initial_points = [
-            (initial_point[0] + 0.1, initial_point[1]),
-            (initial_point[0], initial_point[1] + 0.1),
-            (initial_point[0] + 0.1, initial_point[1] + 0.1)
-        ]
+        gradf = function.grad_call((x0, y0))
+        xs = [x0]
+        ys = [y0]
+
+        iteration = 0
+        in_zona = function.f((x0, y0)) >= 0
+
+        while iteration < max_iter and not in_zona:
+            x1 = x0 - learning_rate * gradf[0]
+            y1 = y0 - learning_rate * gradf[1]
+
+            xs.append(x1)
+            ys.append(y1)
+
+            if function.f((x1, y1)) >= 0:
+                break  # Encuentra el primer punto en la zona admisible y termina
+
+            # Actualizar gradiente para la siguiente iteración
+            gradf = function.grad_call((x1, y1))
+
+            x0, y0 = x1, y1
+            iteration += 1
         
-        result, iterations, history = self.polytopes(initial_points, tol, max_iter)
-        return result, iterations, history
+        return xs[-1], ys[-1]
+
+    def get_minimum_desigualdad(self, x0, y0, tol = 0.001, epsilon = 0.001, delta = 0.001, max_iter = 100000):
+        '''
+        Retorna el mínimo de f sujeto a la restricción g(x, y) >= 0
+        Parametros:
+            x0, y0: punto inicial
+            tol: tolerancia para la convergencia
+            epsilon: tolerancia para la restricción
+            delta: tamaño del paso
+            max_iter: número máximo de iteraciones
+        Retorna:
+            tuple: punto mínimo encontrado
+        '''
+        
+        # Definir una función cuadrática de contorno
+        def f_contour_square(x):
+            return (self.g([x[0], x[1]]))**2
+
+        # Crear una instancia de opt2d con la función cuadrática de contorno
+        self.f_contour = opt2d(f_contour_square)
+
+        # Encontrar la zona admisible
+        XS, ys = self.zona_admisible(self.f_contour, x0, y0)
+        x0, y0 = XS, ys
+        print(self.gradf((x0, y0)))
+        # Inicializar los gradientes
+        gradf = vector([self.g.gradf([x0, y0])[0], self.g.gradf([x0, y0])[1]])
+        gradg = vector([self.g.gradf([x0, y0])[0], self.g.gradf([x0, y0])[1]])
+
+        xs, ys = [], []
+        iteration = 0
+
+        while iteration < max_iter:
+            if self.g.f([x0, y0]) > epsilon:
+                x1, y1 = x0 - delta * gradf.x[0], y0 - delta * gradf.x[1]
+                xs.append(x1)
+                ys.append(y1)
+                in_zona = True
+            else:
+                if gradg.inner(gradf * -1) < 0:
+                    v = (-gradf.x[0] - (gradg.inner(gradf * -1) * gradg.versor()).x[0],
+                         -gradf.x[1] - (gradg.inner(gradf * -1) * gradg.versor()).x[1])
+                    x1, y1 = x0 + delta * v[0], y0 + delta * v[1]
+                    xs.append(x1)
+                    ys.append(y1)
+                    in_zona = False
+                else:
+                    x1, y1 = x0 - delta * gradf.x[0], y0 - delta * gradf.x[1]
+                    xs.append(x1)
+                    ys.append(y1)
+                    in_zona = True
+
+            # Actualizar los gradientes
+            gradf.x = [self.grad_call([x1, y1])[0], self.grad_call([x1, y1])[1]]
+            gradg.x = [self.g.grad_call([x1, y1])[0], self.g.grad_call([x1, y1])[1]]
+
+            # Comprobar la colinealidad
+            col = gradf.versor().inner(gradg.versor())
+            if not in_zona and abs(col - 1) < tol:
+                break
+            if in_zona and abs(gradf.x[0]) < epsilon and abs(gradf.x[1]) < epsilon:
+                break
+
+            x0, y0 = x1, y1
+            iteration += 1
+
+        return xs[-1], ys[-1]
+
+
+
+class opt2d_restriccion_igualdad(opt2d):
+    def __init__(self, f, g):
+        '''
+        f: función de dos variables
+        g: función de dos variables que representa la restriccion
+        '''
+        super().__init__(f)
+        self.g = opt2d(g) #instanciamos un objeto de la clase opt2d con la función g
+
+    def gradg(self, x = (0,0)):
+        '''
+        Dado un punto (x,y), devuelve el gradiente de g en ese punto
+        '''
+        return self.g.gradf(x)
+
+    def campo_gradiente(self, x_range = (-50,50), y_range = (-50,50), nx = 100, ny = 100):
+        '''
+        Devuelve los parámetros necesarios para hacer un plt.quiver y graficar el campo gradiente de la restriccion g en un rango dado
+        Parametros:
+            x_range: tupla con los valores de x inicial y final
+            y_range: tupla con los valores de y inicial y final
+            nx: cantidad de puntos en x
+            ny: cantidad de puntos en y
+
+        Retorna:
+            X, Y, U, V: listas con los valores necesarios para graficar el campo gradiente con plt.quiver()
+        '''
+        return self.g.campo_gradiente(x_range, y_range, nx, ny)
+
+    def get_minimum(self, x0, y0, tol=0.001, delta=0.01, max_iter=100000):
+        '''
+        
+        '''
+        # Define g^2 de la restricción
+        def f_contour_square(x):
+            return abs(self.g.f((x[0], x[1])))  # Evalúa la restricción g (instancia de opt2d) en el punto (x, y)
+        
+        # Encuentra el mínimo de g^2 en (x0, y0)
+        self.f_contour = opt2d(f_contour_square)  # Instanciamos un objeto de la clase opt2d con la restricción g^2
+        point, iters = self.f_contour.gdescent(x0, y0)
+        xs, ys = [point[0]], [point[1]]
+        x0, y0 = xs[-1], ys[-1]
+        
+        # Algoritmo de contour2
+        gradf = vector(self.grad_call((x0, y0)))
+        gradg = vector(self.g.grad_call((x0, y0)))
+        iteration = 0
+        
+        while iteration < max_iter:
+            try:
+                v = vector([-gradf.x[0] - (gradg.versor().inner(gradf) * gradg.versor()).x[0],
+                            -gradf.x[1] - (gradg.versor().inner(gradf) * gradg.versor()).x[1]])
+            except ValueError:
+                print("Encountered zero vector during normalization, stopping iteration.")
+                break
+            
+            x1, y1 = x0 + delta * v.x[0], y0 + delta * v.x[1]
+            
+            xs.append(x1)
+            ys.append(y1)
+            
+            gradf = vector(self.grad_call((x1, y1)))
+            gradg = vector(self.g.grad_call((x1, y1)))
+
+            col = gradf.versor().inner(gradg.versor())
+            if abs(col - 1) < tol:
+                break
+            
+            x0, y0 = x1, y1
+            iteration += 1
+    
+        return xs[-1], ys[-1]
+
+class opt2d_restriccion_desigualdad(opt2d_restriccion_igualdad):
+    def __init__ (self, f, g):
+        super().__init__(f, g)
+        self.f = opt2d(f)
+
+    
+
 
 def objetivo(x):
-    return x[1]**2 + x[0]**2
+    return (x[0]+5+x[1]*4)**2
 
 def restriccion(x):
-    return x[1]+10
+    return x[1]+x[0]+2
+
+a = opt2d(objetivo, restriccion)
+print(a.get_minimum_desigualdad(6,6))
+
+#prints(-15, -15)
 
 
-optimizador = opt2d(f=restriccion, g = objetivo)
-punto_inicial = (0, -10)
-
-
-resultado, iteraciones, historia = optimizador.optimize_with_constraint(punto_inicial)
-print(f"El mínimo encontrado con restriccion es {resultado} después de {iteraciones} iteraciones.")
+# resultado, iteraciones, historia = optimizador.optimize_with_constraint(punto_inicial)
+# print(f"El mínimo encontrado con restriccion es {resultado} después de {iteraciones} iteraciones.")
 
 # resultado2, iteraciones2 = optimizador.gdescent(x0=2, y0=3, learning_rate=0.1, tol=0.0001, max_iter=100000)
 # print(f"El mínimo encontrado con descenso por gradiente es {resultado2} después de {iteraciones2} iteraciones.")

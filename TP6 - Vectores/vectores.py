@@ -8,6 +8,7 @@ class vector:
     def __init__(self,v):
         self.x   = v
         self.eps = 0.00001
+        self.elems = v
         
     def inner(self,v): 
         return sum([self.x[i]*v.x[i] for i in range(len(self.x))])
@@ -17,8 +18,10 @@ class vector:
     
     def versor(self):
         a = self.norm()
-        return vector([self.x[i]/a for i in range(len(self.x))])
-    
+        if a < self.eps:  # Verificación para evitar división por cero
+            # raise ValueError("Cannot normalize a zero vector")
+            return vector([0 for i in range(len(self.x))])
+        return vector([self.x[i] / a for i in range(len(self.x))])    
     def orth(self,v):
         return self - v.versor()*self.inner(v.versor())
     
@@ -42,6 +45,9 @@ class vector:
              salida = None 
         return salida 
     
+    def minus(self, other = None):
+        if other == None: return self
+        return vector([a - b for a, b in zip(self.x, other.x)])
     
     def __str__(self):
         salida ="("
