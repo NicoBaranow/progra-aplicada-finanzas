@@ -19,6 +19,24 @@ class vector(matrix):
         self.eps = 0.00001
         self.x = x
         super().__init__(x, len(x), 1)
+
+    def __sub__(self, other):
+        return vector([a - b for a, b in zip(self.x, other.x)])
+
+    def __add__(self, other):
+        return vector([a + b for a, b in zip(self.x, other.x)])
+
+    def __mul__(self, scalar):
+        return vector([a * scalar for a in self.x])
+
+    def norm(self):
+        return np.linalg.norm(self.x)
+
+    def __getitem__(self, index):
+        return self.x[index]
+
+    def __setitem__(self, index, value):
+        self.x[index] = value
         
     def inner(self, other):
         # Calcula el producto interno entre dos vectores
@@ -326,12 +344,3 @@ class optim():
         self.x = z.solve(self.x, learning_rate=ln, tol=tol_solve)
         
         return self.x, self.f(self.x)
-    
-def objetivo(x):
-    return ((x[0]+4*x[1]**2-27)/9)**2
-
-def restriccion(x):
-    return x[1]+x[0]+2
-
-a = optim(funcion(objetivo, 2), [funcion(restriccion, 2)])
-b = a.restriccion_desigualdad(vector([0, 0]), 0, alpha=0.001, tol=0.000001, tol2=0.1, ln=0.1, tol_solve=0.001)

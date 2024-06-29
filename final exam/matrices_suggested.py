@@ -1,54 +1,16 @@
-import sys
-sys.path.append('TP6 - Vectores')
-from vectores import vector
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Apr 11 16:21:28 2024
 
+@author: santiagokestler
+"""
 class myarray():
     def __init__(self,lista,r,c,by_row = True):
         self.elems=lista
         self.r= r
         self.c= c
         self.by_row= by_row
-
-    def __mul__(self, mult): #arreglar para cuando la otra matriz False
-        new_elems = []
-        if isinstance(mult, int) or isinstance(mult, float):
-            for i in range(len(self.elems)):
-                new_elems.append(self.elems[i] * mult)            
-            salida = myarray(new_elems, self.r, self.c)
-            
-        elif isinstance(mult, myarray):
-            if self.c != mult.r:
-                raise ValueError('the number of rows of array A must be equal to the number of columns in array B')
-            for I in range(self.r):
-                fila = self.get_row(I + 1)
-                for w in range(mult.c):
-                    col = mult.get_col(w + 1)
-                    suma = 0
-                    for x in range(len(fila)):
-                        suma += (fila[x] * col[x])
-                    new_elems.append(suma)                    
-            salida = myarray(new_elems, self.r, mult.c)
-            
-        elif isinstance(mult, vector):
-            mult_matrix = myarray(mult.x, len(mult.x), 1)
-            if self.c != mult_matrix.r:
-                raise ValueError('the number of rows of array A must be equal to the number of columns in array B')
-            for I in range(self.r):
-                fila = self.get_row(I + 1)
-                col = mult_matrix.get_col(1)
-                suma = 0
-                for x in range(len(fila)):
-                    suma += (fila[x] * col[x])
-                new_elems.append(suma)
-            salida = vector(new_elems)
-            
-        else:
-            raise TypeError('Unsupported operand type(s) for *: \'matrix\' and \'' + type(mult).__name__ + '\'')
-        
-        return salida
-    
-    def __rmul__(self, mult):
-        return self.__mul__(mult)
         
     def get_pos(self,j,k):
         if j>self.r or k>self.c:

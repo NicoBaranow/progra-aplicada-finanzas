@@ -35,7 +35,6 @@ class opt2d:
         self.hx = hx
         self.hy = hy
         
-
     def fx(self, x, y):
         # derivada partial respeto a x
         return (self.f(x + self.hx, y) - self.f(x - self.hx, y)) / (2 * self.hx)
@@ -117,69 +116,6 @@ class opt2d:
         if fig is None and ax is None:
             plt.show()
 
-    def rootfind(self, func, x0, tolerance=1e-6, max_iterations=1000):
-        x = x0
-        for _ in range(max_iterations):
-            fx = func(x)
-            f_prime_x = (func(x + self.hx) - func(x - self.hx)) / (2 * self.hx) #Correccion del calc de la derivada
-            if f_prime_x == 0:
-                raise ValueError("Derivative is zero, no convergence possible.")
-            x_new = x - fx / f_prime_x
-            if abs(x_new - x) < tolerance:
-                return x_new
-            x = x_new
-        raise ValueError("Did not converge.")
-
-    def contour1(self, x0, y0, xmin, xmax):
-        # Definir el valor de k
-        k = self.f(x0, y0)
-        
-        # Crear una lista de puntos
-        xs = my_linspace(xmin, xmax, 50)
-        ys = []
-        
-        # g(x,y) = f(x, y) - k
-        def g(y, x):
-            return self.f(x, y) - k
-        
-        # Método de Newton-Raphson
-        for x in xs:
-            try:
-                if len(ys) == 0:
-
-                    y_initial = y0
-                    last_good = y0
-                else:
-
-                    if not np.isnan(ys[-1]):
-                        y_initial = ys[-1]
-                        last_good = ys[-1]
-                    else:
-                        y_initial = last_good
-                
-                y = newton_raphson(lambda y: g(y, x), y_initial)
-                
-                ys.append(y)
-            except ValueError as e:
-                ys.append(np.nan)
-        
-        # Filtramos Nan values
-        xs_filtered = [x for x, y in zip(xs, ys) if not np.isnan(y)]
-        ys_filtered = [y for y in ys if not np.isnan(y)]
-        
-
-        if ys_filtered: 
-            fig, ax = plt.subplots()
-            ax.plot(xs_filtered, ys_filtered, 'ro-', markersize=1, linewidth=1)
-            
-            ax.set_xlim([-7, 7])
-            ax.set_ylim([-7, 7])
-            ax.set_aspect('equal', adjustable='box')
-            plt.grid(True)
-            plt.show()
-        else:
-            print("Aucune valeur valide trouvée pour tracer la courbe de niveau.")
-
     def contour2(self, x0, y0, xmin, xmax, ax = None, fig = None, color = "ro-", learning = 0.001, rep = 10000):
         
         puntos_ah = []  # Puntos para rotación antihoraria
@@ -202,7 +138,6 @@ class opt2d:
             x0, y0 = x1
             puntos_h.append(x1)
     
-
         if fig is None and ax is None:
             fig, ax = plt.subplots()
         xs_ah, ys_ah = zip(*puntos_ah)
@@ -224,7 +159,6 @@ class opt2d:
                 
                 def f_contour_square(x,y):
                     return (self.f(x,y) - k)**2
-                
 
                 self.f_contour = opt2d(f_contour_square)
                 
@@ -233,7 +167,6 @@ class opt2d:
                 if x_prop is not None and y_prop is not None:
                     x0, y0 = self.f_contour.gdescent_global(x_prop, y_prop, stopValue=0, isUtilidad= isUtilidad)
 
-                
                 puntos_ah = []  # Puntos para rotación antihoraria
                 puntos_h = []   # Puntos para rotación horaria
 
@@ -244,7 +177,6 @@ class opt2d:
                     x1 = (x0 + learning*v[0], y0 + learning*v[1])
                     x0, y0 = x1
                     puntos_ah.append(x1)
-                
             
                 # Rotación horaria de 90 grados
                 x0, y0 = puntos_ah[0]  # Reset to starting point
@@ -254,8 +186,6 @@ class opt2d:
                     x1 = (x0 + learning*v[0], y0 + learning*v[1])
                     x0, y0 = x1
                     puntos_h.append(x1)
-                    
-
             
                 # Affichage des résultats
                 if fig is None and ax is None:
@@ -388,7 +318,6 @@ class opt2d:
         else:
             print("Maximum local")
     
-  
 class opt2d_constraint(opt2d):
     
     def __init__(self, func, restriccion):
@@ -651,7 +580,6 @@ class opt2d_constraint_inequality(opt2d_constraint):
         plt.show()   
         print(f'Total time : {(-start_time + time.time()):.2f} seconds')
 
-
 class opt2d_multiple_constraint(opt2d):
     
     def __init__(self, u, restrictionsEquality, restrictionsInequality):
@@ -674,8 +602,7 @@ class opt2d_multiple_constraint(opt2d):
                     salida += minimum
                 return abs(salida)
         self.consumidor = opt2d_constraint(u, zona)
-        
-        
+              
     def get_minimum_1equality_manyInequalities(self, x0, y0, tol=0.0001, epsilon=0.001,delta=0.001, max_iter=100000, returnAsPoints=False):
         
         self.h = self.restrictionsEquality[0]
@@ -699,34 +626,27 @@ class opt2d_multiple_constraint(opt2d):
             gradu, grads, gradh = get_gradients(x0, y0)
             active_constraints = [g for g in self.restrictionsInequality if abs(g.f(x0, y0)) < epsilon]
 
-            
             # Si somos en h y no hay ninguna otra restriccion activa
             if len(active_constraints)==0:
 
                 v = (gradu.elems[0] - (gradh.versor().inner(gradu) * gradh.versor()).elems[0],
                      gradu.elems[1] - (gradh.versor().inner(gradu) * gradh.versor()).elems[1])
                 
-             
                 x1, y1 = x0 + delta * v[0], y0 + delta * v[1]
           
-                
             # Si una otra es activa, es decir gi(x0,y0)=0
             else:
                 
                 gradg = grads[self.restrictionsInequality.index(active_constraints[0])]
 
-                
                 # Si gi et w apuntan en la misma direccion
                 if gradu.inner(gradg)>0:
                     
                     v = (gradu.elems[0] - (gradh.inner(gradu) * gradh.versor()).elems[0],
                          gradu.elems[1] - (gradh.inner(gradu) * gradh.versor()).elems[1])
-                
-                    
-                    x1, y1 = x0 + delta * v[0], y0 + delta * v[1]
-                
                    
-                
+                    x1, y1 = x0 + delta * v[0], y0 + delta * v[1]
+                 
                 #Si no apuntan en la misma direccion
                 else:
                     break
@@ -738,18 +658,15 @@ class opt2d_multiple_constraint(opt2d):
             col = gradu.minus().versor().inner(gradh.versor())
             if abs(col - 1) < tol:
                 break
-         
             
             x0, y0 = x1, y1
             iteration += 1
 
-        
         if returnAsPoints:
             return xs, ys
         else:
             return xs[-1], ys[-1]
         
-    
     def get_minimum_only_inequalities(self, x0, y0, tol=0.001, epsilon=0.001, delta=0.01, max_iter=100000, returnAsPoints=False):
         xs, ys = self.find_zona_admissible_2(function=self.consumidor.g, x0=x0, y0=y0, returnAsPoints=True)
         x0, y0 = xs[-1], ys[-1]
@@ -803,19 +720,7 @@ class opt2d_multiple_constraint(opt2d):
     
             xs.append(x1)
             ys.append(y1)
-            
-            # #Colinéaire ?
-            # colinearios = [gradu.minus().versor().inner(gradg.versor()) for gradg in grads]
-            # stop = False
-            # for col in colinearios:
-            #     if not in_zona and (abs(col - 1) < tol):
-            #         stop = True
-            #     if in_zona and abs(gradu.elems[0]) < epsilon and abs(gradu.elems[1]) < epsilon:
-            #         stop = True
-            
-            # if stop: 
-            #     break
-    
+
             x0, y0 = x1, y1
             iteration += 1
     
@@ -824,8 +729,6 @@ class opt2d_multiple_constraint(opt2d):
         else:
             return xs[-1], ys[-1]
 
-
-    
     def plotTraj(self, x0, y0, ax, fig, xmin, xmax, ymin, ymax, nx, ny, repContour = 10000, learningContour = 0.001,repMin = 10000, learningMin = 0.001, isUtilidad = True, contour_start = 1, contour_stop = 5, contour_step=1):
         
         start_time = time.time()
@@ -899,8 +802,7 @@ class opt2d_multiple_constraint(opt2d):
 
          else:
              return xs, ys
-        
-      
+              
 class polytope():
     def __init__(self,P_list,f) :
         self.P= P_list
@@ -1030,425 +932,68 @@ class polytope():
         print(self.P[0])
         return self.P[0]
     
-    
-def tp1_1(x,y):
-    return np.sin((9 * x**2 + 6 * x * y - 33 * x - 26 * y + 4 * y**2 + 133) / 100)
 
-def tp1_2(x,y):
-    return (myarray([x,y], 1, 2) * myarray([9,3,3,4], 2, 2) * myarray([x,y], 2, 1)).elems[0]
+# Definimos la función objetivo
+def objective(x):
+    return np.sqrt((x[0] - x[2])**2 + (x[1] - x[3])**2)
 
-def test(x,y):
-    return (x-2)**2 + (y-5)**2 + 3
+# Definimos las restricciones
+def constraint_circle(x):
+    return 1 - ((x[0] - 3)**2 + x[1]**2)
 
-def newton_raphson(func, x0, hx=1e-6, tol=1e-4, max_iter=10000):
-   
-    x = x0
-    for i in range(max_iter):
-        fx = func(x)
-        f_prime_x = (func(x + hx) - func(x - hx)) / (2 * hx)  # Approximation numérique de la dérivée
-        
-        if f_prime_x == 0:
-            raise ValueError("La dérivée est nulle, pas de convergence possible.")
-        
-        x_new = x - fx / f_prime_x
-        
-        if abs(x_new - x) < tol:
-            return x_new
-        x = x_new
-    
-    raise ValueError("La méthode de Newton-Raphson n'a pas convergé.")
+def constraint_square(x):
+    return [
+        1 - x[2] - x[3],
+        x[3] - x[2] + 1,
+        1 - x[3] + x[2],
+        x[2] + x[3] + 1
+    ]
 
+# Gradiente de la función objetivo
+def grad_objective(x):
+    grad = np.zeros_like(x)
+    dist = objective(x)
+    grad[0] = (x[0] - x[2]) / dist
+    grad[1] = (x[1] - x[3]) / dist
+    grad[2] = (x[2] - x[0]) / dist
+    grad[3] = (x[3] - x[1]) / dist
+    return grad
 
+# Proyectar un punto sobre el círculo
+def project_circle(x):
+    angle = np.arctan2(x[1], x[0] - 3)
+    return np.array([3 + np.cos(angle), np.sin(angle)])
 
-# Trois façons de trouver un minimum
-   # 1 : tu traces le champ gradient et tu regardes les flèches
-   # 2 : tu appelles polytope
-   # 3 : tu appelles gdescent
+# Proyectar un punto sobre el cuadrado
+def project_square(x):
+    if x[0] + x[1] > 1:
+        x[0] = 1 - x[1]
+    if x[1] - x[0] > 1:
+        x[1] = 1 + x[0]
+    if x[1] + x[0] < -1:
+        x[0] = -1 - x[1]
+    if x[0] + x[1] < -1:
+        x[1] = -1 - x[0]
+    return x
 
-#%% TP Optim 1
+# Método de descenso por gradientes
+def gradient_descent(x0, lr=0.01, max_iter=1000, tol=1e-6):
+    x = np.array(x0, dtype=float)  # Aseguramos que x0 sea de tipo float
+    for _ in range(max_iter):
+        grad = grad_objective(x)
+        x -= lr * grad
+        x[:2] = project_circle(x[:2])
+        x[2:] = project_square(x[2:])
+        if np.linalg.norm(grad) < tol:
+            break
+    return x
 
-# Nouvelle instance d'optimizer avec la fonction tp(x,y)
-def TP_Optim1():
-    optimizer = opt2d(tp1_2)
-    optimizer.contours()
+# Puntos iniciales para (x1, x2, x3, x4)
+x0 = [3, 0, 1, 0]
 
-    # On trouve le minimum avec la méthode polytope
-    pltp = polytope([(0.5,0.21),(0.01,0.01),(0.8,0.5)],test)
-    print(" \nAvec Polytope")
-    pt = pltp.polyt_prog()
-    print("Gradient de f : ", optimizer.grad_call(pt[0], pt[1]))
-    
-    # Avec le champ gradient
-    optimizer.campo_gradiente(-5, 5, -5, 5, 20, 20, optimizer.gdescent(1, 1, returnAsPoints=True))
-    
-    
-    # Avec gdescent
-    print("\nAvec gdescent Global")
-    pt = optimizer.gdescent_global(x0=-2, y0=-2)
-    print("Gradient de f : ", optimizer.grad_call(pt[0], pt[1]))
-    print(optimizer.minimumState(optimizer.hessienna(pt[0], pt[1])))
+# Ejecutamos el método de descenso por gradientes
+result_x = gradient_descent(x0)
+result_fun = objective(result_x)
+result_success = constraint_circle(result_x) >= 0 and all(c >= 0 for c in constraint_square(result_x))
 
-
-#%% TP Optim 2
-
-# Optimisation sans contrainte
-
-def TP_2_SC_1(x, y):
-    return 2 * (x**3) + (x * (y**2)) + (5 * (x**2)) + y**2
-
-def TP_2_SC_2(x, y):
-    return x / (1 + x**2 + y**2)
-
-def TP_2_SC_3(x, y):
-    return x * np.sin(y)
-
-def TP_2_SC_4(x, y):
-    return np.cos((x**2 + y**2) / 10) * np.exp(-x**2)
-
-# On appelle toutes les fonctions
-def TP_Optim_SC():
-    opt = opt2d(TP_2_SC_1)
-    print(opt.gdescent(x0=2, y0 = 3))
-    
-    opt = opt2d(TP_2_SC_2)
-    print(opt.gdescent(2,3))
-    
-    # opt = opt2d(TP_2_SC_3)
-    # opt.contours()
-    # opt.gdescent_global()
-    
-    # opt = opt2d(TP_2_SC_4)
-    # opt.contours()
-    # opt.gdescent_global()
-
-# Optimisation avec contrainte
-
-
-def gg(x,y):
-    return y**3 - x**2
-
-def ff(x,y):
-    return y
-
-def TP_2_AC_1(x, y):
-    return x*y
-
-def TP_2_AC_2(x, y):
-    return (1/x) + 1/y
-
-def TP_2_AC_3(x, y):
-    return x + y
-
-def TP_2_AC_4(x, y):
-    return x**2 + y**2
-
-def restric1(x,y):
-    return -(x**2 + y**2 - 4)
-
-def restric2(x,y):
-    return (1/x)**2 + (1/y)**2 - (1/4)**2
-
-def restric3(x,y):
-    return 16
-
-def restric4(x,y):
-    return (x-1)**3 - y**2
-
-def TP_Optim_AC():
-
-    opt = opt2d_constraint(TP_2_AC_1, restric1)
-
-    # Campo gradiente de f + curva nivel de f + restriccion g
-    opt.fig1, opt.ax1 = plt.subplots()
-    opt.plot1(opt.ax1, opt.fig1,-5,5,-5,5,10,10)
-    
-    # Campo gradiente de g + curva nivel de g 
-    opt.fig2, opt.ax2 = plt.subplots()
-    opt.plot2(opt.ax2, opt.fig2,-5,5,-5,5,10,10,2,2)
-    
-    # Curvas nivel de f + restriction g
-    opt.fig3, opt.ax3 = plt.subplots()
-    opt.plot3(opt.ax3, opt.fig3,-5,5,-5,5,10,10,2,2)
-    
-    #Trouver minimum sous contrainte et afficher trajectoire
-    opt.fig4, opt.ax4 = plt.subplots()
-    opt.plot4(3,7, opt.ax4, opt.fig4,-5,5,-5,5,10,10)
-    
-
-    
-    # opt = opt2d_constraint(TP_2_AC_2, restric2)
-
-    # # Campo gradiente de f + curva nivel de f + restriccion g
-    # opt.fig1, opt.ax1 = plt.subplots()
-    # opt.plot1(opt.ax1, opt.fig1,-5,5,-5,5,10,10)
-    
-    # # Campo gradiente de g + curva nivel de g 
-    # opt.fig2, opt.ax2 = plt.subplots()
-    # #opt.plot2(opt.ax2, opt.fig2,-5,5,-5,5,10,10,2,2)
-    
-    # # Curvas nivel de f + restriction g
-    # opt.fig3, opt.ax3 = plt.subplots()
-    # #opt.plot3(opt.ax3, opt.fig3,-5,5,-5,5,10,10,2,2)
-    
-    # #Trouver minimum sous contrainte et afficher trajectoire
-    # opt.fig4, opt.ax4 = plt.subplots()
-    # opt.plot4(2,-2, opt.ax4, opt.fig4,-5,5,-5,5,10,10)
-    
-    
-    # opt = opt2d_constraint(TP_2_AC_3, restric3)
-
-    # # Campo gradiente de f + curva nivel de f + restriccion g
-    # opt.fig1, opt.ax1 = plt.subplots()
-    # opt.plot1(opt.ax1, opt.fig1,-5,5,-5,5,10,10)
-    
-    # # Campo gradiente de g + curva nivel de g 
-    # opt.fig2, opt.ax2 = plt.subplots()
-    # #opt.plot2(opt.ax2, opt.fig2,-5,5,-5,5,10,10,2,2)
-    
-    # # Curvas nivel de f + restriction g
-    # opt.fig3, opt.ax3 = plt.subplots()
-    # #opt.plot3(opt.ax3, opt.fig3,-5,5,-5,5,10,10,2,2)
-    
-    # #Trouver minimum sous contrainte et afficher trajectoire
-    # opt.fig4, opt.ax4 = plt.subplots()
-    # opt.plot4(2,3, opt.ax4, opt.fig4,-5,5,-5,5,10,10)
-    
-    
-    
-    opt = opt2d_constraint(TP_2_AC_4, restric4)
-
-    # Campo gradiente de f + curva nivel de f + restriccion g
-    # opt.fig1, opt.ax1 = plt.subplots()
-    # opt.plot1(opt.ax1, opt.fig1,-5,5,-5,5,10,10)
-    
-    # Campo gradiente de g + curva nivel de g 
-    # opt.fig2, opt.ax2 = plt.subplots()
-    #opt.plot2(opt.ax2, opt.fig2,-5,5,-5,5,10,10,2,2)
-    
-    # Curvas nivel de f + restriction g
-    # opt.fig3, opt.ax3 = plt.subplots()
-    #opt.plot3(opt.ax3, opt.fig3,-5,5,-5,5,10,10,2,2)
-    
-    #Trouver minimum sous contrainte et afficher trajectoire
-    opt.fig4, opt.ax4 = plt.subplots()
-    opt.plot4(4,-2.2, opt.ax4, opt.fig4,-5,5,-5,5,10,10)
-    
-
-    
-#%% 
-
-def TP_Optim_AC_inequality():
-    opt = opt2d_constraint_inequality(TP_2_AC_1, restric1)
-    fig, ax = plt.subplots()
-    opt.plotTraj(-1.1,-1,ax,fig,-5, 5, -5, 5, 10, 10)
-    fig, ax = plt.subplots()
-    opt.plotTraj(3.8,1,ax,fig,-5, 5, -5, 5, 10, 10)
-    fig, ax = plt.subplots()
-    opt.plotTraj(3,3,ax,fig,-5, 5, -5, 5, 10, 10)
-    fig, ax = plt.subplots()
-    opt.plotTraj(-3,0.5,ax,fig,-5, 5, -5, 5, 10, 10)
-    
-
-
-# Fonction principale pour l'optimisation
-def TP_multivariada_a():
-    
-    def g1(x, y):
-        return x
-
-    def g2(x, y):
-        return y
-
-    def g3(x, y, px, py, m):
-        return m - (px * x + py * y)
-
-    def u(x, y):
-        if x <= 0 or y <= 0:
-            return float('nan')
-        return x**0.5 * y**0.5
-    
-    opt = opt2d_multiple_constraint(u, [lambda x,y:g3(x,y,1,1,10)], [g1, g2])
-    fig, ax = plt.subplots()
-    opt.plotTraj(x0=1, y0=6, ax=ax, fig=fig, xmin=0, xmax=10, ymin=0, ymax=10, nx=10, ny=10, learningMin =0.001,repMin=100000)
-    u_star = opt.get_minimum_only_inequalities(5, 5, returnAsPoints=False, delta=0.001,max_iter=10000, epsilon=0.01)
-    
-    # Maintenir le revenu constant et faire varier py
-    py_values = [0.7 + i * 0.05 for i in range(13)]
-    x_star_py = []
-    y_star_py = []
-    for py in py_values:
-        px = 1
-        m = 10
-        g3_current = lambda x, y: g3(x, y, px, py, m)
-        opt = opt2d_multiple_constraint(u, [], [g1, g2, g3_current])
-        maxim = opt.get_minimum_only_inequalities(5, 5, returnAsPoints=False, delta=0.001,max_iter=10000, epsilon=0.01)
-        x_star_py.append(maxim[0])
-        y_star_py.append(maxim[1])
-        print(f'Minimo para px = 1 y py = {py} : {maxim[0], maxim[1]}')
-        
-
-    plt.figure()
-    plt.plot(py_values, x_star_py, label='x*')
-    plt.plot(py_values, y_star_py, label='y*')
-    plt.xlabel('py')
-    plt.ylabel('Valores óptimos')
-    plt.legend()
-    plt.title('Valores óptimos en función de py')
-    plt.show()
-    
-    # Maintenir les prix constants et faire varier beta
-    beta_values = [0.2 + i * 0.05 for i in range(13)]
-    x_star_beta = []
-    y_star_beta = []
-    for beta in beta_values:
-        u_current = lambda x, y: x**0.5 * y**beta
-        opt = opt2d_multiple_constraint(u_current, [], [g1, g2, lambda x, y: g3(x, y, 1, 1, 10)])
-        maxim = opt.get_minimum_only_inequalities(5, 5, returnAsPoints=False, delta=0.001,max_iter=10000, epsilon=0.01)
-        x_star_beta.append(maxim[0])
-        y_star_beta.append(maxim[1])
-
-    plt.figure()
-    plt.plot(beta_values, x_star_beta, label='x*')
-    plt.plot(beta_values, y_star_beta, label='y*')
-    plt.xlabel('beta')
-    plt.ylabel('Valores óptimos')
-    plt.legend()
-    plt.title('Valores óptimos en función de beta')
-    plt.show()
-    
-    
-def TP_multivariada_b():
-   
-    # Minimisar canasta
-    def g1(x, y):
-        return x
-
-    def g2(x, y):
-        return y
-
-    def g3(x, y, px, py, m):
-        return m - (px * x + py * y)
-
-    def u(x, y):
-        return min((x**0.5),(y**0.5))
-    
-    opt = opt2d_multiple_constraint(u, [lambda x,y:g3(x,y,1,1,10)], [g1, g2])
-    fig, ax = plt.subplots()
-    opt.plotTraj(x0=1, y0=6, ax=ax, fig=fig, xmin=0.5, xmax=10, ymin=0.5, ymax=10, nx=10, ny=10, learningMin =0.001,repMin=100000)
- 
-    # Maintenir le revenu constant et faire varier py
-    py_values = [0.7 + i * 0.05 for i in range(13)]
-    x_star_py = []
-    y_star_py = []
-    for py in py_values:
-        px = 1
-        m = 10
-        g3_current = lambda x, y: g3(x, y, px, py, m)
-        opt = opt2d_multiple_constraint(u, [], [g1, g2, g3_current])
-        maxim = opt.get_minimum_only_inequalities(5, 5, returnAsPoints=False, delta=0.001,max_iter=10000, epsilon=0.01)
-        x_star_py.append(maxim[0])
-        y_star_py.append(maxim[1])
-        print(f'Minimo para px = 1 y py = {py} : {maxim[0], maxim[1]}')
-        
-
-    plt.figure()
-    plt.plot(py_values, x_star_py, label='x*')
-    plt.plot(py_values, y_star_py, label='y*')
-    plt.xlabel('py')
-    plt.ylabel('Valores óptimos')
-    plt.legend()
-    plt.title('Valores óptimos en función de py')
-    plt.show()
-    
-    # Maintenir les prix constants et faire varier beta
-    beta_values = [0.2 + i * 0.05 for i in range(13)]
-    x_star_beta = []
-    y_star_beta = []
-    for beta in beta_values:
-        u_current = lambda x, y: min(x**0.5, y**beta)
-        opt = opt2d_multiple_constraint(u_current, [], [g1, g2, lambda x, y: g3(x, y, 1, 1, 10)])
-        maxim = opt.get_minimum_only_inequalities(5, 5, returnAsPoints=False, delta=0.001,max_iter=10000, epsilon=0.01)
-        x_star_beta.append(maxim[0])
-        y_star_beta.append(maxim[1])
-
-    plt.figure()
-    plt.plot(beta_values, x_star_beta, label='x*')
-    plt.plot(beta_values, y_star_beta, label='y*')
-    plt.xlabel('beta')
-    plt.ylabel('Valores óptimos')
-    plt.legend()
-    plt.title('Valores óptimos en función de beta')
-    plt.show()
-    
-    
-def TP_multivariada_d():
-    
-    # Recuperar u_star
-    def g1(x, y):
-        return x
-
-    def g2(x, y):
-        return y
-
-    def g3(x, y, px, py, m):
-        return m - (px * x + py * y)
-
-    def u(x, y):
-        if x <= 0 or y <= 0:
-            return float('nan')
-        return x**0.5 * y**0.5
-    
-    opt = opt2d_multiple_constraint(u, [], [g1, g2, lambda x,y:g3(x,y,1,1,10)])
-    minimo = opt.get_minimum_only_inequalities(5, 5, returnAsPoints=False, delta=0.001,max_iter=10000, epsilon=0.01)
-    u_star = opt.f(minimo[0], minimo[1])
-    
-    
-    def g1(x, y):
-        return x
-
-    def g2(x, y):
-        return y
-
-    def g3(x, y):
-        return (x**0.5 * y**0.5) - u_star
-
-    def u(x, y):
-        return -(x + y)
-    
-    opt = opt2d_multiple_constraint(u, [], [g1, g2, g3])
-    fig, ax = plt.subplots()
-    opt.plotTraj(x0=1, y0=6, ax=ax, fig=fig, xmin=0.5, xmax=20, ymin=0.5, ymax=20, nx=10, ny=10, learningMin =0.001,repMin=100000)
- 
-   
-def TP_multivariada_f():
-    def utilidad(x,y):
-        return (x+y)
-    def g1(x,y):
-        return 5 - (0.2*x + 0.1*y)
-    def g2(x,y):
-        return 1 - (0.025*x + 0.050*y)
-    def g3(x,y):
-        return x
-    def g4(x,y):
-        return y
-    opt = opt2d_multiple_constraint(utilidad, [], [g1, g2, g3, g4])
-    fig, ax = plt.subplots()
-    opt.plotTraj(10, 0, ax, fig, 0, 50, 0, 50, 10, 10, learningMin=0.01, repMin=100000, learningContour=0.01, repContour=100000, contour_start=5, contour_stop=21, contour_step=5)
-
-def twocircles():
-
-    def g1(x,y):
-        return -((x-2)**2 + (y-2)**2 - 3)
-    
-    def g2(x,y):
-        return -((x-4)**2 + (y-2)**2 - 3)
-    
-    def f(x,y):
-        return x+y
-    
-    opt = opt2d_multiple_constraint(f, [], [g1, g2])
-    figMul, axMul = plt.subplots()
-    opt.plotTraj(6, 2, axMul, figMul, xmin=0, xmax=10, ymin=0, ymax=10, nx=10, ny=10,learningMin=0.001, repMin=10000, learningContour=0.001, repContour=10000, isUtilidad=True, contour_start=4, contour_stop=8)
-
-
-TP_Optim_AC()
+result_x, result_fun, result_success
