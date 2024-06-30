@@ -6,7 +6,7 @@ Created on Thu Apr 11 16:21:28 2024
 @author: santiagokestler
 """
 class myarray():
-    def __init__(self,lista,r,c,by_row = True):
+    def __init__(self,lista,r,c,by_row):
         self.elems=lista
         self.r= r
         self.c= c
@@ -64,17 +64,15 @@ class myarray():
             row.append(self.elems[self.get_pos(j,i)])
         return row
                 
-    def get_col(self, k):
-        if k < 1 or k > self.c:
-            raise ValueError("Índice de columna fuera de rango")
+    def get_col(self,k):
+        col= []
         
-        col = []
         if self.by_row:
             for i in range(self.r):
-                col.append(self.elems[self.c * i + (k - 1)])
+                col.append(self.elems[self.c*i+(k-1)])
         else:
-            for i in range(self.r):
-                col.append(self.elems[self.r * (k - 1) + i])
+            for i in range(self.c):
+                col.append(self.elems[self.r*(k-1)+i])
         
         return col
     
@@ -253,22 +251,27 @@ class myarray():
         res= myarray(aux,self.r,self.c,self.by_row)
         return res        
     
-    def rprod(self, B):
-        if isinstance(B, myarray):
-            if self.c != B.r:
-                raise ValueError("Las dimensiones de las matrices no son compatibles para la multiplicación.")
-            result = []
-            for i in range(self.r):
-                row = self.get_row(i + 1)
-                for j in range(B.c):
-                    col = B.get_col(j + 1)
-                    # Asegurarse de que row y col son listas de números y multiplicar adecuadamente
-                    product = sum([row[k] * col[k] for k in range(len(row))])
-                    result.append(product)
-            return myarray(result, self.r, B.c, self.by_row)
+    def rprod(self,B):
+        aux= []
+        if isinstance(B,int) or isinstance(B,float):
+            for i in range(len(self.elems)):
+                aux.append(B*self.elems[i])
+            res= myarray(aux, self.r, self.c, self.by_row)
         else:
-            raise TypeError("El objeto B debe ser una instancia de myarray")
-
+            row= []
+            col= []
+            if self.by_row!=B.by_row:
+                B.switch()
+            if self.c!=B.r:
+                return print('No se puede realizar la operacion')
+            for i in range(self.r):
+                row= self.get_row(i+1)
+                for j in range(B.c):
+                    col= B.get_col(j+1)
+                    aux.append(sum([row[t]*col[t] for t in range(self.c)]))
+                    
+            res= myarray(aux,self.r,B.c,self.by_row)    
+        return res           
     
     def lprod(self,B):
         aux= []
@@ -428,11 +431,16 @@ class myarray():
         for i in range(1,self.r+1):
             if i<self.r:
                 buscar= A_p.get_col(i)
+                m_elem= None
                 for j in range(i,self.r+1):
                     if abs(buscar[j-1])>abs(buscar[i-1]):
-                        break
-                if buscar[j-1]!=0:
-                    A_p,P= A_p.swap_rows_v2(i,j) 
+                        m_elem= j
+                    
+                if m_elem!=None:
+                    if buscar[m_elem-1]!=0:
+                        A_p,P= A_p.swap_rows_v2(i,m_elem)
+                    elif abs(buscar[m_elem-1])!=abs(buscar[i-1]):
+                        A_p,P= A_p.swap_rows_v2(i,m_elem)
                 
             pivot= A_p.get_col(i)
             pivot_value= pivot[i-1]
@@ -443,12 +451,15 @@ class myarray():
             L.append(self.I())
             for l in range(1,L[i-1].r+1):
                 L[i-1].elems[L[i-1].get_pos(l,i)]= factor[l-1]
-                
-            if abs(buscar[j-1])>abs(buscar[i-1]): 
-                Perm.append(P)
+            
+            if m_elem!=None:
+                if abs(buscar[m_elem-1])>abs(buscar[i-1]): 
+                    Perm.append(P)
+                else:
+                    Perm.append(A_p.I())
             else:
                 Perm.append(A_p.I())
-               
+                
             A_p= A_p.lprod(L[i-1])
 
         return L,Perm
@@ -571,9 +582,7 @@ class lineq(myarray):
         
         return None
         
-    
-    
-    
+
     
     
     

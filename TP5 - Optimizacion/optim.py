@@ -4,8 +4,9 @@ import numpy as np
 import time
 import sys
 
-sys.path.append('TP4 - matrices')
+sys.path.append('TP4 - Matrices')
 sys.path.append('TP6 - Vectores')
+
 from matrices_suggested import lineq, myarray
 from vectores import vector
 
@@ -36,30 +37,24 @@ class opt2d:
         self.hy = hy
         
     def fx(self, x, y):
-        # derivada partial respeto a x
         return (self.f(x + self.hx, y) - self.f(x - self.hx, y)) / (2 * self.hx)
 
     def fy(self, x, y):
-        # derivada partial respeto a y
         return (self.f(x, y + self.hy) - self.f(x, y - self.hy)) / (2 * self.hy)
 
     def fxx(self, x, y):
-        # 2nda derivada partial respeto a x
         return (self.f(x + self.hx, y) - 2*self.f(x, y) + self.f(x - self.hx, y)) / (self.hx**2)
 
     def fxy(self, x, y):
-        # derivada cruzada
         return (self.f(x + self.hx, y + self.hy) - self.f(x - self.hx, y + self.hy) - self.f(x + self.hx, y - self.hy) + self.f(x - self.hx, y - self.hy)) / (4 * self.hx * self.hy)
 
     def fyy(self, x, y):
-        # 2nda derivada partial respeto a y
         return (self.f(x, y + self.hy) - 2*self.f(x, y) + self.f(x, y - self.hy)) / (self.hy**2)
 
     def gradf(self):
         return (self.fx, self.fy)
     
     def grad_call(self, x, y):
-        # Converting complex to real if necessary
         grad_x = self.gradf()[0](x, y)
         grad_y = self.gradf()[1](x, y)
         return [grad_x.real if isinstance(grad_x, complex) else grad_x,
@@ -170,7 +165,6 @@ class opt2d:
                 puntos_ah = []  # Puntos para rotación antihoraria
                 puntos_h = []   # Puntos para rotación horaria
 
-                # Rotación antihoraria de 90 grados
                 for _ in range(rep):
                     grad = self.grad_call(x0, y0)
                     v = (-grad[1], grad[0])
@@ -178,8 +172,7 @@ class opt2d:
                     x0, y0 = x1
                     puntos_ah.append(x1)
             
-                # Rotación horaria de 90 grados
-                x0, y0 = puntos_ah[0]  # Reset to starting point
+                x0, y0 = puntos_ah[0] 
                 for _ in range(rep):
                     grad = self.grad_call(x0, y0)
                     v = (grad[1], - grad[0])
@@ -187,7 +180,6 @@ class opt2d:
                     x0, y0 = x1
                     puntos_h.append(x1)
             
-                # Affichage des résultats
                 if fig is None and ax is None:
                     fig, ax = plt.subplots()
                 xs_ah, ys_ah = zip(*puntos_ah)
@@ -267,7 +259,6 @@ class opt2d:
             x_start = np.random.uniform(xmin, xmax)
             y_start = np.random.uniform(xmin, xmax)
             
-            # Initialisation
             fprimex, fprimey = self.gradf()
 
             learningrate = delta
@@ -299,7 +290,6 @@ class opt2d:
                 best_min = (x0, y0)
                 best_points = (xs, ys)
             if stopValue is not None:
-                # Si restriccion(x0, y0) < 0.01, es muy probable que esta el minimo que buscamos
                 if abs(self.f(x0, y0) - stopValue) < delta: 
                     break
         if not returnAsPoints:
@@ -442,9 +432,7 @@ class opt2d_constraint_inequality(opt2d_constraint):
         super().__init__(func, restriccion)
         self.func = opt2d(func)
         
-        
     def find_zona_admissible(self, function, x0=1,y0=4,delta=0.0001,tol=0.00001,Nmax=100000, returnAsPoints = False):
-         # Récupération des fonctions de dérivées partielles
          
          gradf = function.grad_call(x0, y0)
          learningrate = delta
@@ -454,18 +442,15 @@ class opt2d_constraint_inequality(opt2d_constraint):
          count = 0
          in_zona = False
          
-         # Vérifier les conditions d'arrêt 
          if self.g.f(x0, y0) >= 0:
              in_zona = True
              
          while count < Nmax and not in_zona:
-             # Calcul des nouvelles valeurs des variables
              
              x1 = x0 - learningrate * gradf[0]
              y1 = y0 - learningrate * gradf[1]
             
              
-             # Ajouter les nouvelles valeurs aux listes
              xs.append(x1)
              ys.append(y1)
              
@@ -475,7 +460,6 @@ class opt2d_constraint_inequality(opt2d_constraint):
                  break
              
 
-             # Mettre à jour les variables pour la prochaine itération
              x0, y0 = x1, y1
              gradf = function.grad_call(x0, y0)
              count += 1
@@ -507,7 +491,6 @@ class opt2d_constraint_inequality(opt2d_constraint):
                 ys.append(y1)
                 in_zona = True
             else:
-                #On est sur la restriction, on veut savoir si gradf tend vers la zone admissible
                 if gradg.inner(gradf.minus()) < 0:
                     
                     v = (-gradf.elems[0] - (gradg.inner(gradf.minus()) * gradg.versor()).elems[0],
@@ -528,8 +511,6 @@ class opt2d_constraint_inequality(opt2d_constraint):
             gradf.elems = [self.grad_call(x1, y1)[0],self.grad_call(x1, y1)[1]]
             gradg.elems = [self.g.grad_call(x1, y1)[0],self.g.grad_call(x1, y1)[1]]
 
-            
-            #Colinéaire ?
             col = gradf.versor().inner(gradg.versor())
             if not in_zona and abs(col - 1) < tol:
                 break
@@ -548,24 +529,20 @@ class opt2d_constraint_inequality(opt2d_constraint):
         
         start_time = time.time()
 
-        # Curvas de nivel de f
         print("Graficando Contours")
         self.contours(xmin = xmin, xmax = xmax, ax=ax, fig=fig)
 
 
-        # Restriction
         print("Graficando restriccion")
         self.g.contour(0, xmin = xmin, xmax = xmax, ax=ax, fig=fig, color="g-")
 
 
-        # Coloramos g(x,y)>0
         x = my_linspace(xmin, xmax, 400) 
         y = my_linspace(xmin, xmax, 400) 
         X, Y = np.meshgrid(x, y) 
         Z = self.g.f(X, Y) 
-        ax.contourf(X, Y, Z, levels=[0, Z.max()], colors=['green'], alpha=0.5)  # Colorie en rouge la zone où g(x, y) > 0
+        ax.contourf(X, Y, Z, levels=[0, Z.max()], colors=['green'], alpha=0.5)  
         
-        # Plot los puntos de la busqueda del minimum
         print("Busqueda del minimo con restriccion")
         points = self.get_minimum_2(x0, y0, returnAsPoints=True)
 
@@ -626,7 +603,7 @@ class opt2d_multiple_constraint(opt2d):
             gradu, grads, gradh = get_gradients(x0, y0)
             active_constraints = [g for g in self.restrictionsInequality if abs(g.f(x0, y0)) < epsilon]
 
-            # Si somos en h y no hay ninguna otra restriccion activa
+            # Si estamos en h y no hay ninguna otra restriccion activa
             if len(active_constraints)==0:
 
                 v = (gradu.elems[0] - (gradh.versor().inner(gradu) * gradh.versor()).elems[0],
@@ -634,12 +611,10 @@ class opt2d_multiple_constraint(opt2d):
                 
                 x1, y1 = x0 + delta * v[0], y0 + delta * v[1]
           
-            # Si una otra es activa, es decir gi(x0,y0)=0
             else:
                 
                 gradg = grads[self.restrictionsInequality.index(active_constraints[0])]
 
-                # Si gi et w apuntan en la misma direccion
                 if gradu.inner(gradg)>0:
                     
                     v = (gradu.elems[0] - (gradh.inner(gradu) * gradh.versor()).elems[0],
@@ -647,14 +622,12 @@ class opt2d_multiple_constraint(opt2d):
                    
                     x1, y1 = x0 + delta * v[0], y0 + delta * v[1]
                  
-                #Si no apuntan en la misma direccion
                 else:
                     break
                 
             xs.append(x1)
             ys.append(y1)
             
-            #Colinéaire ?
             col = gradu.minus().versor().inner(gradh.versor())
             if abs(col - 1) < tol:
                 break
@@ -683,12 +656,10 @@ class opt2d_multiple_constraint(opt2d):
             active_constraints = [g for g in self.restrictionsInequality if abs(g.f(x0, y0)) < epsilon]
     
             if len(active_constraints) == 0:
-                # Zone admissible, suivre le gradient de la fonction objective
                 x1, y1 = x0 + delta * gradu.elems[0], y0 + delta * gradu.elems[1]
                 in_zona = True
             elif len(active_constraints) == 1:
                 in_zona = False
-                # Sur une bordure, se déplacer le long de cette restriction
                 gradg = grads[self.restrictionsInequality.index(active_constraints[0])]
                 if gradu.inner(gradg) < 0:
                     v = (gradu.elems[0] - gradg.versor().inner(gradu) * gradg.versor().elems[0],
@@ -698,24 +669,19 @@ class opt2d_multiple_constraint(opt2d):
                     x1, y1 = x0 + delta * gradu.elems[0], y0 + delta * gradu.elems[1]
             elif len(active_constraints) == 2:
                 in_zona = False
-                # Intersection de deux restrictions
                 gradg1 = grads[self.restrictionsInequality.index(active_constraints[0])]
                 gradg2 = grads[self.restrictionsInequality.index(active_constraints[1])]
                 if gradu.inner(gradg1) > 0 and gradu.inner(gradg2) > 0:
-                    # Si les deux gradients pointent dans la zone admissible
                     x1, y1 = x0 + delta * gradu.elems[0], y0 + delta * gradu.elems[1]
                 elif gradu.inner(gradg1) > 0 and gradu.inner(gradg2) < 0:
-                    # Si seul gradg1 pointe dans la zone admissible
                     v = (gradu.elems[0] - gradg1.versor().inner(gradu) * gradg1.versor().elems[0],
                          gradu.elems[1] - gradg1.versor().inner(gradu) * gradg1.versor().elems[1])
                     x1, y1 = x0 + delta * v[0], y0 + delta * v[1]
                 elif gradu.inner(gradg1) < 0 and gradu.inner(gradg2) > 0:
-                    # Si seul gradg2 pointe dans la zone admissible
                     v = (gradu.elems[0] - gradg2.versor().inner(gradu) * gradg2.versor().elems[0],
                          gradu.elems[1] - gradg2.versor().inner(gradu) * gradg2.versor().elems[1])
                     x1, y1 = x0 + delta * v[0], y0 + delta * v[1]
                 else:
-                    # Les deux gradients pointent hors de la zone admissible, s'arrêter
                     break
     
             xs.append(x1)
@@ -761,7 +727,6 @@ class opt2d_multiple_constraint(opt2d):
         print(f'Total time : {(-start_time + time.time()):.2f} seconds')
     
     def find_zona_admissible_2(self, function, x0=1,y0=4,delta=0.001,tol=0.001,Nmax=100000, returnAsPoints = False):
-         # Récupération des fonctions de dérivées partielles
          
          gradf = function.grad_call(x0, y0)
          learningrate = delta
@@ -771,28 +736,21 @@ class opt2d_multiple_constraint(opt2d):
          count = 0
          in_zona = False
          
-         # Vérifier les conditions d'arrêt 
          if function.f(x0, y0) < tol:
              in_zona = True
              
          while count < Nmax and not in_zona:
-             # Calcul des nouvelles valeurs des variables
              
              x1 = x0 - learningrate * gradf[0]
              y1 = y0 - learningrate * gradf[1]
-            
-             
-             # Ajouter les nouvelles valeurs aux listes
+
              xs.append(x1)
              ys.append(y1)
              
             
-             # Vérifier les conditions d'arrêt 
              if function.f(x1, y1) < tol:
                  break
              
-
-             # Mettre à jour les variables pour la prochaine itération
              x0, y0 = x1, y1
              gradf = function.grad_call(x0, y0)
              count += 1
@@ -804,16 +762,17 @@ class opt2d_multiple_constraint(opt2d):
              return xs, ys
               
 class polytope():
-    def __init__(self,P_list,f) :
-        self.P= P_list
+    def __init__(self, P_list, f):
+        self.P = P_list
         self.P.sort()
-        self.f= f
-        if not self.check_point():raise ValueError("Problema con los puntos")
+        self.f = f
+        if not self.check_point():
+            raise ValueError("Problema con los puntos")
         
     def puntos(self):
-        x1 = self.f(self.P[0][0], self.P[0][1])
-        x2 = self.f(self.P[1][0], self.P[1][1])
-        x3 = self.f(self.P[2][0], self.P[2][1])
+        x1 = self.f(self.P[0] + [0, 0])
+        x2 = self.f(self.P[1] + [0, 0])
+        x3 = self.f(self.P[2] + [0, 0])
         
         lista = [x1, x2, x3]
         lista_puntos = [0, 0, 0]
@@ -881,12 +840,12 @@ class polytope():
         x_ref = inter[0] - (self.P[0][0] - inter[0])
         y_ref = inter[1] - (self.P[0][1] - inter[1])
         
-        x_prime = (x_ref, y_ref)
+        x_prime = [x_ref, y_ref]
         
         restric = (self.P[0][0] - self.P[2][0], self.P[0][1] - self.P[2][1])
         
-        while (abs(restric[0]) > epsilon and abs(restric[1]) > epsilon) or (abs(self.f(self.P[0][0], self.P[0][1]) - self.f(self.P[2][0], self.P[2][1])) > epsilon):
-            if self.f(x_prime[0], x_prime[1]) < self.f(self.P[0][0], self.P[0][1]):
+        while (abs(restric[0]) > epsilon and abs(restric[1]) > epsilon) or (abs(self.f(self.P[0] + [0, 0]) - self.f(self.P[2] + [0, 0])) > epsilon):
+            if self.f(x_prime + [0, 0]) < self.f(self.P[0] + [0, 0]):
                 self.P[0] = x_prime
                 self.P.sort()
                 self.puntos()
@@ -895,7 +854,7 @@ class polytope():
                 x_ref = inter[0] - (self.P[0][0] - inter[0])
                 y_ref = inter[1] - (self.P[0][1] - inter[1])
                 
-                x_prime = (x_ref, y_ref)
+                x_prime = [x_ref, y_ref]
 
             else:
                 inter = self.interseccion(self.P[0], self.P[2], self.P[1])
@@ -903,9 +862,9 @@ class polytope():
                 x_ref = inter[0] - (self.P[1][0] - inter[0])
                 y_ref = inter[1] - (self.P[1][1] - inter[1])
                 
-                x_prime = (x_ref, y_ref)
+                x_prime = [x_ref, y_ref]
                 
-                if self.f(x_prime[0], x_prime[1]) < self.f(self.P[1][0], self.P[1][1]):
+                if self.f(x_prime + [0, 0]) < self.f(self.P[1] + [0, 0]):
                     self.P[1] = x_prime
                     self.P.sort()
                     self.puntos()
@@ -913,87 +872,129 @@ class polytope():
                     x_ref = inter[0] - (self.P[0][0] - inter[0])
                     y_ref = inter[1] - (self.P[0][1] - inter[1])
                     
-                    x_prime = (x_ref, y_ref)
+                    x_prime = [x_ref, y_ref]
 
                 else:
-                    self.P[0] = ((1/2) * (self.P[0][0] + self.P[2][0]), (1/2) * (self.P[0][1] + self.P[2][1]))
-                    self.P[1] = ((1/2) * (self.P[1][0] + self.P[2][0]), (1/2) * (self.P[1][1] + self.P[2][1]))
+                    self.P[0] = [(1/2) * (self.P[0][0] + self.P[2][0]), (1/2) * (self.P[0][1] + self.P[2][1])]
+                    self.P[1] = [(1/2) * (self.P[1][0] + self.P[2][0]), (1/2) * (self.P[1][1] + self.P[2][1])]
                     
                     inter = self.interseccion(self.P[1], self.P[2], self.P[0])
                     
                     x_ref = inter[0] - (self.P[0][0] - inter[0])
                     y_ref = inter[1] - (self.P[0][1] - inter[1])
                     
-                    x_prime = (x_ref, y_ref)
+                    x_prime = [x_ref, y_ref]
 
             
             restric = (self.P[0][0] - self.P[2][0], self.P[0][1] - self.P[2][1])
         
         print(self.P[0])
         return self.P[0]
+
+class opt4d(opt2d):
+    def __init__(self, func, hx=0.001, hy=0.001):
+        super().__init__(func, hx, hy)
+        self.nd = 4  # Definimos que estamos trabajando en R4
+
+    def grad_call(self, p, h=0.001):
+        grad = np.zeros(self.nd)
+        for i in range(self.nd):
+            p1 = np.array(p, dtype=float)
+            p2 = np.array(p, dtype=float)
+            p1[i] += h
+            p2[i] -= h
+            grad[i] = (self.f(p1) - self.f(p2)) / (2 * h)
+        return grad
+
+    def gdescent_con_restriccion(self, x0, delta=0.01, tol=0.0001, max_iter=1000):
+        historial = []
+        p = np.array(x0, dtype=float)
+        for i in range(max_iter):
+            if self.restriccion(p) >= 0:
+                grad = self.grad_call(p)
+                p -= delta * grad
+                historial.append(p.copy())
+                if np.linalg.norm(grad) < tol:
+                    break
+            else:
+                break
+        return p, historial
+
+# Define the restriction function as a method of the class
+def restriccion(self, p):
+    x1, y1, x2, y2 = p
+    return 9 - ((x1 - x2)**2 + (y1 - y2)**2)
+
+# Attach the restriction method to the class
+opt4d.restriccion = restriccion
+
+
+######################### Optimizacion Basa ######################### 
+
+class funcion(object):
+    def __init__(self,f,nd,name="None"):   
+        # f es una función definida fuera de la clase
+        # nd cantidad de variables 
+        # name tiene la definicion algebraica de la funcion
+        
+        self.f = f
+        self.nd = nd
+        self.name = name
     
-
-# Definimos la función objetivo
-def objective(x):
-    return np.sqrt((x[0] - x[2])**2 + (x[1] - x[3])**2)
-
-# Definimos las restricciones
-def constraint_circle(x):
-    return 1 - ((x[0] - 3)**2 + x[1]**2)
-
-def constraint_square(x):
-    return [
-        1 - x[2] - x[3],
-        x[3] - x[2] + 1,
-        1 - x[3] + x[2],
-        x[2] + x[3] + 1
-    ]
-
-# Gradiente de la función objetivo
-def grad_objective(x):
-    grad = np.zeros_like(x)
-    dist = objective(x)
-    grad[0] = (x[0] - x[2]) / dist
-    grad[1] = (x[1] - x[3]) / dist
-    grad[2] = (x[2] - x[0]) / dist
-    grad[3] = (x[3] - x[1]) / dist
-    return grad
-
-# Proyectar un punto sobre el círculo
-def project_circle(x):
-    angle = np.arctan2(x[1], x[0] - 3)
-    return np.array([3 + np.cos(angle), np.sin(angle)])
-
-# Proyectar un punto sobre el cuadrado
-def project_square(x):
-    if x[0] + x[1] > 1:
-        x[0] = 1 - x[1]
-    if x[1] - x[0] > 1:
-        x[1] = 1 + x[0]
-    if x[1] + x[0] < -1:
-        x[0] = -1 - x[1]
-    if x[0] + x[1] < -1:
-        x[1] = -1 - x[0]
-    return x
-
-# Método de descenso por gradientes
-def gradient_descent(x0, lr=0.01, max_iter=1000, tol=1e-6):
-    x = np.array(x0, dtype=float)  # Aseguramos que x0 sea de tipo float
-    for _ in range(max_iter):
-        grad = grad_objective(x)
-        x -= lr * grad
-        x[:2] = project_circle(x[:2])
-        x[2:] = project_square(x[2:])
-        if np.linalg.norm(grad) < tol:
-            break
-    return x
-
-# Puntos iniciales para (x1, x2, x3, x4)
-x0 = [3, 0, 1, 0]
-
-# Ejecutamos el método de descenso por gradientes
-result_x = gradient_descent(x0)
-result_fun = objective(result_x)
-result_success = constraint_circle(result_x) >= 0 and all(c >= 0 for c in constraint_square(result_x))
-
-result_x, result_fun, result_success
+    def __call__(self,x): #x es una tupla/lista. Sale un escalar
+        if len(x)==self.nd:
+            salida = self.f(x)
+        else:
+            print("la funcion " + self.name+ " requiere inputs de dimension "+ str(self.nd))
+            salida  = None
+        return salida
+    
+    def grad(self,x,h=0.001): # sale una lista 
+        x = list(x)
+        salida = [0]*self.nd
+        for i in range(self.nd):
+            aux = [0]*self.nd 
+            aux[i] = h
+            salida[i]=(self.f([(x[i]+aux[i]) for i in range(self.nd)])-self.f([(x[i]-aux[i]) for i in range(self.nd)]))/(2*h)
+        return salida
+        
+class optim():
+    """ Clase que contiene
+    
+    funcion objetivo: f 
+    lista de funciones con restriccion de igualdad: h(x)=0
+    lista de funciones con restriccion de desigualdad : g(x)>=0
+    
+    todas las funciones deben coincidir en el self.nd ( estan todas en el mismo espacio )
+    
+    Notar que todavia no se determina si el objetivo es de minimizacion o de maximizacion"""
+    
+    def __init__(self,f,h=[],g=[]): 
+        # por default la clase inicializa problemas sin restricciones
+        self.f = f
+        self.h = h
+        self.g = g
+        self.minimize = True
+        self.coef = -1.0
+        self.learn = 0.1
+        self.x = None
+        
+    def solve(self,x0,minimize=True,learning_rate=0.1, tol =0.001):
+        self.x = x0
+        self.learn = learning_rate 
+        
+        self.minimize=minimize
+        if not(self.minimize): self.coef = 1.0 
+            
+        condition = True
+        
+        while condition : 
+            w = self.f.grad(self.x)
+            xp = [self.x[i] + self.coef * self.learn *  w[i] for i in range(self.f.nd)]   
+            delta = sum([(xp[i]-self.x[i])**2.0 for i in range(self.f.nd)])**0.5
+            condition = delta> tol
+            
+            print(xp,delta)
+            self.x=xp
+            
+        return None    

@@ -1,9 +1,13 @@
 #autovalores
 import sys
+import os
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(current_dir, 'TP4 - Matrices'))
+sys.path.append(os.path.join(current_dir, 'TP6 - Vectores'))
 sys.path.append('TP6 - Vectores')
 sys.path.append('TP2 - Polinomios')
-from vectores import vector
 
+from vectores import vector
 from polis import poly
 
 class matrix(poly, vector):
